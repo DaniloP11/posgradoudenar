@@ -27,14 +27,23 @@
 <body>
 
     <div class="container-fluid d-grid gap-3">
-        <div class=" p-2 row align-items-center">
+        <div class="p-2 row align-items-center">
 
-            <div class="col-3 ">
+            <div class="col-3">
                 <nav class="navbar navbar-dark bg-dark fixed-top">
                     <div class="container-fluid">
                         <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar" aria-controls="offcanvasDarkNavbar">
                             <span class="navbar-toggler-icon"></span>
                         </button>
+
+                        <!-- Formulario de búsqueda en el centro del navbar -->
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+                        <form class="d-flex mx-auto" role="search" method="get" action="search.php">
+                            <input class="form-control me-2" type="search" name="query" placeholder="Buscar" aria-label="Search" required>
+                            <button class="btn btn-outline-success" type="submit">Buscar</button>
+                        </form>
+                        
 
                         <div class="btn-group">
                             <button type="button" class="btn btn-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
