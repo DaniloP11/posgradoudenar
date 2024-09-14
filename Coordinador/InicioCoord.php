@@ -113,9 +113,9 @@ if ($mostrar = mysqli_fetch_array($query_coordinador)) {
         <h3 class="card-header text-center">Bienvenid@ <?php echo "$nombre"; ?> <?php echo "$apellido"; ?></h3>
         <div class="card-body">
             <h5 class="card-title">Información</h5>
-            <p class="card-text">Usted ha ingresado exitosamente al apartado del administrador,
-            en este módulo posee control total para la gestión de usuarios tales como docentes, estudiantes
-            y administradores, así como la gestión del trabajo de grado registrado por los estudiantes.</p>
+            <p class="card-text">Usted ha ingresado exitosamente al apartado de coordinador,
+            en este módulo posee control total para la gestión de usuarios tales como docentes, estudiantes, 
+            así como cohortes y cursos.</p>
         </div>
         </div>
     </div>

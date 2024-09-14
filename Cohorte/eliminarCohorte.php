@@ -9,9 +9,14 @@ if (!isset($_SESSION["email"]) || !isset($_SESSION["rol"])) {
 }
 
 // Obtener el ID del cohorte a eliminar
-$id_cohorte = $_GET['id'] ?? null;
-if (!$id_cohorte) {
-    die("ID de cohorte no proporcionado");
+$id_cohorte = $_GET['id_cohorte'] ?? null;
+
+// Mostrar el valor recibido del ID para depuración
+echo "ID de cohorte recibido: " . htmlspecialchars($id_cohorte);
+
+// Verificar que el ID sea válido
+if (!$id_cohorte || !is_numeric($id_cohorte)) {
+    die("ID de cohorte no proporcionado o no válido");
 }
 
 // Conexión a la base de datos
