@@ -16,22 +16,26 @@ if (!$conexion) {
 
 // Obtener docentes
 $docentes = [];
-$docenteQuery = "SELECT id_docente, CONCAT(nombre, ' ', apellido) AS nombre_completo FROM docentes";
+$docenteQuery = "SELECT id_docente, nombre AS nombre_completo FROM docentes";
 $docenteResult = mysqli_query($conexion, $docenteQuery);
 if ($docenteResult) {
     while ($row = mysqli_fetch_assoc($docenteResult)) {
         $docentes[] = $row;
     }
+} else {
+    echo "<script>alert('Error al obtener docentes');</script>";
 }
 
 // Obtener programas
 $programas = [];
-$programaQuery = "SELECT id_programa, nombre_programa FROM programas";
+$programaQuery = "SELECT id_programa, descripcion FROM programas";
 $programaResult = mysqli_query($conexion, $programaQuery);
 if ($programaResult) {
     while ($row = mysqli_fetch_assoc($programaResult)) {
         $programas[] = $row;
     }
+} else {
+    echo "<script>alert('Error al obtener programas');</script>";
 }
 
 // Verificar si se ha enviado un ID de curso para editar
@@ -166,16 +170,10 @@ if (isset($_GET['id'])) {
         <h3 align="center">EDITAR CURSO</h3>
         <div class="row">
             <div class="col py-5">
-                <div class="mx-5 bg-light" style="border-radius: 2%; ">
+                <div class="mx-5 bg-light" style="border-radius: 2%;">
                     <form action="" method="post">
                         <div class="row mb-3 needs-validation" novalidate>
                             <div class="col mx-5 px-5">
-                                <div class="row mb-3">
-                                    <div class="col">
-                                        <label for="id_curso" class="form-label">ID Curso</label>
-                                        <input type="number" class="form-control" id="id_curso" name="id_curso" value="<?php echo htmlspecialchars($curso['id_curso']); ?>" readonly>
-                                    </div>
-                                </div>
                                 <div class="row mb-3">
                                     <div class="col">
                                         <label for="nombre_curso" class="form-label">Nombre del Curso</label>
@@ -192,7 +190,7 @@ if (isset($_GET['id'])) {
                                             <option value="" disabled>Seleccione un programa</option>
                                             <?php foreach ($programas as $programa): ?>
                                                 <option value="<?php echo $programa['id_programa']; ?>" <?php echo ($curso['id_programa'] == $programa['id_programa'] ? 'selected' : ''); ?>>
-                                                    <?php echo $programa['nombre_programa']; ?>
+                                                    <?php echo htmlspecialchars($programa['descripcion']); ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
@@ -208,7 +206,7 @@ if (isset($_GET['id'])) {
                                             <option value="" disabled>Seleccione un docente</option>
                                             <?php foreach ($docentes as $docente): ?>
                                                 <option value="<?php echo $docente['id_docente']; ?>" <?php echo ($curso['id_docente'] == $docente['id_docente'] ? 'selected' : ''); ?>>
-                                                    <?php echo $docente['nombre_completo']; ?>
+                                                    <?php echo htmlspecialchars($docente['nombre_completo']); ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
@@ -217,9 +215,12 @@ if (isset($_GET['id'])) {
                                         </div>
                                     </div>
                                 </div>
-                                <div class="text-center">
-                                    <button type="submit" class="btn btn-primary">Actualizar</button>
+                                <br>
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button class="btn btn-primary" type="submit">Actualizar</button>
+                                    <a href="listarCurso.php" class="btn btn-secondary">Cancelar</a>
                                 </div>
+                                <br><br>
                             </div>
                         </div>
                         <br>

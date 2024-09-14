@@ -19,26 +19,18 @@ if (isset($_GET['id']) && !empty($_GET['id'])) {
     exit;
 }
 
-// Cargar programas para el dropdown
-$programas_query = mysqli_query(conexion(), "SELECT id_programa, nombre_programa FROM programas");
-
-// Cargar coordinadores para el dropdown
-$coordinadores_query = mysqli_query(conexion(), "SELECT id_coordinador, CONCAT(nombre, ' ', apellido) AS nombre_completo FROM coordinadores");
-
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Validación de campos obligatorios
-    if (empty($_POST['nombre']) || empty($_POST['apellido']) || empty($_POST['correo']) || empty($_POST['telefono']) || empty($_POST['direccion']) || empty($_POST['genero']) || empty($_POST['fecha_nacimiento']) || empty($_POST['id_programa']) || empty($_POST['id_coordinador'])) {
+    if (empty($_POST['nombre']) || empty($_POST['correo']) || empty($_POST['contraseña']) || empty($_POST['telefono']) || empty($_POST['direccion']) || empty($_POST['genero']) || empty($_POST['fecha_nacimiento'])) {
         echo "<script>alert('Todos los campos obligatorios deben estar llenos');</script>";
     } else {
         $nombre = $_POST['nombre'];
-        $apellido = $_POST['apellido'];
         $correo = $_POST['correo'];
+        $contraseña = password_hash($_POST['contraseña'], PASSWORD_DEFAULT); // Encriptar contraseña
         $telefono = $_POST['telefono'];
         $direccion = $_POST['direccion'];
         $genero = $_POST['genero'];
         $fecha_nacimiento = $_POST['fecha_nacimiento'];
-        $id_programa = $_POST['id_programa'];
-        $id_coordinador = $_POST['id_coordinador'];
 
         // Manejo de archivo de fotografía
         $fotografia = $asistente['fotografia'];
@@ -71,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Actualización en la base de datos
         if (!isset($error)) {
-            $query_update_asistente = mysqli_query(conexion(), "UPDATE asistentes SET nombre='$nombre', apellido='$apellido', correo='$correo', telefono='$telefono', direccion='$direccion', genero='$genero', fecha_nacimiento='$fecha_nacimiento', fotografia='$fotografia', id_programa='$id_programa', id_coordinador='$id_coordinador' WHERE id_asistente=$id_asistente");
+            $query_update_asistente = mysqli_query(conexion(), "UPDATE asistentes SET nombre='$nombre', correo='$correo', contraseña='$contraseña', telefono='$telefono', direccion='$direccion', genero='$genero', fecha_nacimiento='$fecha_nacimiento', fotografia='$fotografia' WHERE id_asistente=$id_asistente");
 
             if ($query_update_asistente) {
                 echo "<script>alert('Asistente actualizado correctamente'); window.location.href='listarAsistente.php';</script>";
@@ -159,26 +151,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                         <label for="nombre" class="form-label">Nombre</label>
                                         <input type="text" class="form-control" id="nombre" name="nombre" value="<?php echo htmlspecialchars($asistente['nombre']); ?>">
                                     </div>
-                                    <div class="col">
-                                        <label for="apellido" class="form-label">Apellido</label>
-                                        <input type="text" class="form-control" id="apellido" name="apellido" value="<?php echo htmlspecialchars($asistente['apellido']); ?>">
-                                    </div>
                                 </div>
                                 <div class="row mb-3">
                                     <div class="col">
                                         <label for="correo" class="form-label">Correo</label>
                                         <input type="email" class="form-control" id="correo" name="correo" value="<?php echo htmlspecialchars($asistente['correo']); ?>">
                                     </div>
+                                </div>
+                                <div class="row mb-3">
                                     <div class="col">
-                                        <label for="telefono" class="form-label">Teléfono</label>
-                                        <input type="tel" class="form-control" id="telefono" name="telefono" value="<?php echo htmlspecialchars($asistente['telefono']); ?>">
+                                        <label for="contraseña" class="form-label">Contraseña</label>
+                                        <input type="password" class="form-control" id="contraseña" name="contraseña" required>
                                     </div>
                                 </div>
                                 <div class="row mb-3">
                                     <div class="col">
+                                        <label for="telefono" class="form-label">Teléfono</label>
+                                        <input type="tel" class="form-control" id="telefono" name="telefono" value="<?php echo htmlspecialchars($asistente['telefono']); ?>">
+                                    </div>
+                                    <div class="col">
                                         <label for="direccion" class="form-label">Dirección</label>
                                         <input type="text" class="form-control" id="direccion" name="direccion" value="<?php echo htmlspecialchars($asistente['direccion']); ?>">
                                     </div>
+                                </div>
+                                <div class="row mb-3">
                                     <div class="col">
                                         <label for="genero" class="form-label">Género</label>
                                         <select id="genero" name="genero" class="form-select">
@@ -201,35 +197,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                         <?php endif; ?>
                                     </div>
                                 </div>
-                                <div class="row mb-3">
-                                    <div class="col">
-                                        <label for="id_programa" class="form-label">Programa</label>
-                                        <select id="id_programa" name="id_programa" class="form-select">
-                                            <?php while ($row = mysqli_fetch_assoc($programas_query)): ?>
-                                                <option value="<?php echo $row['id_programa']; ?>" <?php if ($row['id_programa'] == $asistente['id_programa']) echo 'selected'; ?>>
-                                                    <?php echo $row['nombre_programa']; ?>
-                                                </option>
-                                            <?php endwhile; ?>
-                                        </select>
-                                    </div>
+                                <br>
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button class="btn btn-primary" type="submit">Actualizar</button>
+                                    <a href="listarAsistente.php" class="btn btn-secondary">Cancelar</a>
                                 </div>
-                                <div class="row mb-3">
-                                    <div class="col">
-                                        <label for="id_coordinador" class="form-label">Coordinador</label>
-                                        <select id="id_coordinador" name="id_coordinador" class="form-select">
-                                            <?php while ($row = mysqli_fetch_assoc($coordinadores_query)): ?>
-                                                <option value="<?php echo $row['id_coordinador']; ?>" <?php if ($row['id_coordinador'] == $asistente['id_coordinador']) echo 'selected'; ?>>
-                                                    <?php echo $row['nombre_completo']; ?>
-                                                </option>
-                                            <?php endwhile; ?>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="row mb-3">
-                                    <div class="col">
-                                        <button type="submit" class="btn btn-primary">Actualizar</button>
-                                    </div>
-                                </div>
+                                <br><br>
                             </div>
                         </div>
                     </form>

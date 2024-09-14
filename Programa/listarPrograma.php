@@ -127,7 +127,6 @@ if (!$query) {
                     <thead>
                         <tr>
                             <th scope="col">ID Programa</th>
-                            <th scope="col">Nombre del Programa</th>
                             <th scope="col">Código SNIES</th>
                             <th scope="col">Descripción</th>
                             <th scope="col">Logo</th>
@@ -145,13 +144,15 @@ if (!$query) {
                         while ($row = mysqli_fetch_array($query)) {
                             // Obtener nombre del coordinador
                             $id_coordinador = $row['id_coordinador'];
-                            $query_coordinador = mysqli_query($conexion, "SELECT nombre, apellido FROM coordinadores WHERE id_coordinador = '$id_coordinador'");
+                            $query_coordinador = mysqli_query($conexion, "SELECT nombre FROM coordinadores WHERE id_coordinador = '$id_coordinador'");
                             $coordinador = mysqli_fetch_assoc($query_coordinador);
-                            $nombre_coordinador = $coordinador ? $coordinador['nombre'] . ' ' . $coordinador['apellido'] : 'No asignado';
+                            $nombre_coordinador = $coordinador ? $coordinador['nombre'] : 'No asignado';
+
+                            // Eliminar cualquier prefijo que empiece por 'contacto.'
+                            $correo_contacto = preg_replace('/^contacto\./', '', $row['correo_contacto']);
                         ?>
                         <tr>
                             <td><?php echo htmlspecialchars($row['id_programa']); ?></td>
-                            <td><?php echo htmlspecialchars($row['nombre_programa']); ?></td>
                             <td><?php echo htmlspecialchars($row['codigo_SNIES']); ?></td>
                             <td><?php echo htmlspecialchars($row['descripcion']); ?></td>
                             <td>
@@ -161,7 +162,7 @@ if (!$query) {
                                     Sin Logo
                                 <?php endif; ?>
                             </td>
-                            <td><?php echo htmlspecialchars($row['correo_contacto']); ?></td>
+                            <td><?php echo htmlspecialchars($correo_contacto); ?></td>
                             <td><?php echo htmlspecialchars($row['telefono_contacto']); ?></td>
                             <td><?php echo htmlspecialchars($row['lineas_trabajo']); ?></td>
                             <td><?php echo htmlspecialchars($nombre_coordinador); ?></td>

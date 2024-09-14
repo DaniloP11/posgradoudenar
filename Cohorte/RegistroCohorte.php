@@ -10,13 +10,12 @@ if (!isset($_SESSION["email"]) || !isset($_SESSION["rol"])) {
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Verificar que todos los campos obligatorios están llenos
-    $requiredFields = ['id_cohorte', 'fecha_inicio', 'fecha_fin', 'id_programa'];
+    $requiredFields = ['fecha_inicio', 'fecha_fin', 'id_programa'];
     $missingFields = array_filter($requiredFields, fn($field) => empty($_POST[$field]));
 
     if ($missingFields) {
         echo "<script>alert('Todos los campos obligatorios deben estar llenos');</script>";
     } else {
-        $id_cohorte = $_POST['id_cohorte'];
         $fecha_inicio = $_POST['fecha_inicio'];
         $fecha_fin = $_POST['fecha_fin'];
         $id_programa = $_POST['id_programa'];
@@ -28,24 +27,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit();
         }
 
-        // Verificar si el ID del cohorte ya existe
-        $stmt = mysqli_prepare($conexion, "SELECT id_cohorte FROM cohortes WHERE id_cohorte = ?");
-        mysqli_stmt_bind_param($stmt, 'i', $id_cohorte);
-        mysqli_stmt_execute($stmt);
-        mysqli_stmt_store_result($stmt);
+        // Insertar nuevo cohorte (Nota: Asumiendo que id_cohorte es autoincremental)
+        $stmt = mysqli_prepare($conexion, "INSERT INTO cohortes (fecha_inicio, fecha_fin, id_programa) VALUES (?, ?, ?)");
+        mysqli_stmt_bind_param($stmt, 'ssi', $fecha_inicio, $fecha_fin, $id_programa);
 
-        if (mysqli_stmt_num_rows($stmt) > 0) {
-            echo "<script>alert('El ID del cohorte ya existe');</script>";
+        if (mysqli_stmt_execute($stmt)) {
+            echo "<script>alert('Cohorte creado correctamente');</script>";
         } else {
-            // Insertar nuevo cohorte
-            $stmt = mysqli_prepare($conexion, "INSERT INTO cohortes (id_cohorte, fecha_inicio, fecha_fin, id_programa) VALUES (?, ?, ?, ?)");
-            mysqli_stmt_bind_param($stmt, 'issi', $id_cohorte, $fecha_inicio, $fecha_fin, $id_programa);
-
-            if (mysqli_stmt_execute($stmt)) {
-                echo "<script>alert('Cohorte creado correctamente');</script>";
-            } else {
-                echo "<script>alert('Error al crear el cohorte');</script>";
-            }
+            echo "<script>alert('Error al crear el cohorte');</script>";
         }
 
         // Cerrar la declaración y la conexión
@@ -60,13 +49,13 @@ if (!$conexion) {
     die("Error de conexión a la base de datos");
 }
 
-$stmt = mysqli_prepare($conexion, "SELECT id_programa, nombre_programa FROM programas");
+$stmt = mysqli_prepare($conexion, "SELECT id_programa, descripcion FROM programas");
 mysqli_stmt_execute($stmt);
-mysqli_stmt_bind_result($stmt, $id_programa, $nombre_programa);
+mysqli_stmt_bind_result($stmt, $id_programa, $descripcion);
 
 $programas = [];
 while (mysqli_stmt_fetch($stmt)) {
-    $programas[] = ['id_programa' => $id_programa, 'nombre_programa' => $nombre_programa];
+    $programas[] = ['id_programa' => $id_programa, 'descripcion' => $descripcion];
 }
 
 mysqli_stmt_close($stmt);
@@ -171,39 +160,39 @@ mysqli_close($conexion);
                     <form action="" method="post">
                         <div class="row mb-3 needs-validation" novalidate>
                             <div class="col mx-5 px-5">
-                                <div class="row mb-3">
-                                    <div class="col">
-                                        <label for="id_cohorte" class="form-label">ID Cohorte</label>
-                                        <input type="number" class="form-control" id="id_cohorte" name="id_cohorte" required>
-                                    </div>
-                                </div>
+                                <!-- Campo para la fecha de inicio -->
                                 <div class="row mb-3">
                                     <div class="col">
                                         <label for="fecha_inicio" class="form-label">Fecha de Inicio</label>
                                         <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" required>
                                     </div>
+                                    <!-- Campo para la fecha de fin -->
                                     <div class="col">
                                         <label for="fecha_fin" class="form-label">Fecha de Fin</label>
                                         <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" required>
                                     </div>
                                 </div>
+
+                                <!-- Campo para seleccionar el programa -->
                                 <div class="row mb-3">
                                     <div class="col">
                                         <label for="id_programa" class="form-label">Programa</label>
-                                        <select id="id_programa" name="id_programa" class="form-select" required>
-                                            <option value="">Seleccionar Programa</option>
+                                        <select class="form-select" id="id_programa" name="id_programa" required>
+                                            <option value="" disabled selected>Seleccione un programa</option>
                                             <?php foreach ($programas as $programa): ?>
                                                 <option value="<?php echo htmlspecialchars($programa['id_programa']); ?>">
-                                                    <?php echo htmlspecialchars($programa['nombre_programa']); ?>
+                                                    <?php echo htmlspecialchars($programa['descripcion']); ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
                                 </div>
+
+                                <!-- Botones para enviar o cancelar el formulario -->
                                 <br>
                                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                                     <button class="btn btn-primary" type="submit">Registrar</button>
-                                    <button class="btn btn-secondary" type="reset">Cancelar</button>
+                                    <button id="cancelar-btn" class="btn btn-secondary" type="button">Cancelar</button>
                                 </div>
                                 <br><br>
                             </div>
@@ -214,6 +203,31 @@ mysqli_close($conexion);
         </div>
     </div>
 </div>
+
+<script>
+document.getElementById('cancelar-btn').addEventListener('click', function() {
+    // Obtén el rol del usuario desde una variable PHP insertada en JavaScript
+    var rol = "<?php echo $_SESSION['rol']; ?>";
+
+    var url = '';
+    switch (rol) {
+        case '1':
+            url = '../Admin/UsuariosAdmin.html';
+            break;
+        case '2':
+            url = '../Asistente/UsuariosAsiste.html';
+            break;
+        case '3':
+            url = '../Coordinador/UsuariosCoord.html';
+            break;
+        default:
+            url = '../index.html'; // Redirigir a una página predeterminada si no se encuentra el rol
+            break;
+    }
+
+    window.location.href = url;
+});
+</script>
 
 </body>
 </html>

@@ -14,7 +14,7 @@ if (!$conexion) {
 }
 
 // Consulta para obtener la lista de docentes
-$sql = "SELECT id_docente, nombre, apellido, correo, telefono, direccion, foto, formacion_pregrado, formacion_posgrado, areas_conocimiento, id_programa
+$sql = "SELECT id_docente, nombre, identificacion, direccion, telefono, correo, foto, formacion_pregrado, formacion_posgrado, areas_conocimiento
         FROM docentes";
 $query = mysqli_query($conexion, $sql);
 
@@ -120,15 +120,14 @@ if (!$query) {
                         <tr>
                             <th scope="col">ID Docente</th>
                             <th scope="col">Nombre</th>
-                            <th scope="col">Apellido</th>
-                            <th scope="col">Correo</th>
-                            <th scope="col">Teléfono</th>
+                            <th scope="col">Identificación</th>
                             <th scope="col">Dirección</th>
+                            <th scope="col">Teléfono</th>
+                            <th scope="col">Correo</th>
                             <th scope="col">Foto</th>
                             <th scope="col">Formación Pregrado</th>
                             <th scope="col">Formación Posgrado</th>
                             <th scope="col">Áreas de Conocimiento</th>
-                            <th scope="col">Programa</th>
                             <th scope="col">Acciones</th>
                         </tr>
                     </thead>
@@ -136,32 +135,22 @@ if (!$query) {
                         <?php while ($row = mysqli_fetch_assoc($query)) {
                             $id_docente = htmlspecialchars($row['id_docente']);
                             $nombre = htmlspecialchars($row['nombre']);
-                            $apellido = htmlspecialchars($row['apellido']);
-                            $correo = htmlspecialchars($row['correo']);
-                            $telefono = htmlspecialchars($row['telefono']);
+                            $identificacion = htmlspecialchars($row['identificacion']);
                             $direccion = htmlspecialchars($row['direccion']);
+                            $telefono = htmlspecialchars($row['telefono']);
+                            $correo = htmlspecialchars($row['correo']);
                             $foto = htmlspecialchars($row['foto']);
                             $formacion_pregrado = htmlspecialchars($row['formacion_pregrado']);
                             $formacion_posgrado = htmlspecialchars($row['formacion_posgrado']);
                             $areas_conocimiento = htmlspecialchars($row['areas_conocimiento']);
-                            $id_programa = htmlspecialchars($row['id_programa']);
-
-                            // Obtener nombre del programa
-                            $programaSql = "SELECT nombre_programa FROM programas WHERE id_programa = ?";
-                            $stmt = mysqli_prepare($conexion, $programaSql);
-                            mysqli_stmt_bind_param($stmt, 'i', $id_programa);
-                            mysqli_stmt_execute($stmt);
-                            mysqli_stmt_bind_result($stmt, $nombre_programa);
-                            mysqli_stmt_fetch($stmt);
-                            mysqli_stmt_close($stmt);
                         ?>
                         <tr>
                             <td><?php echo $id_docente; ?></td>
                             <td><?php echo $nombre; ?></td>
-                            <td><?php echo $apellido; ?></td>
-                            <td><?php echo $correo; ?></td>
-                            <td><?php echo $telefono; ?></td>
+                            <td><?php echo $identificacion; ?></td>
                             <td><?php echo $direccion; ?></td>
+                            <td><?php echo $telefono; ?></td>
+                            <td><?php echo $correo; ?></td>
                             <td>
                                 <?php if ($foto): ?>
                                     <img src="<?php echo $foto; ?>" alt="Foto del docente" style="width: 60px; height: auto;">
@@ -172,11 +161,10 @@ if (!$query) {
                             <td><?php echo $formacion_pregrado; ?></td>
                             <td><?php echo $formacion_posgrado; ?></td>
                             <td><?php echo $areas_conocimiento; ?></td>
-                            <td><?php echo $nombre_programa ? $nombre_programa : 'No asignado'; ?></td>
                             <td>
                                 <div class="btn-group">
                                     <a href="editarDocente.php?id=<?php echo $id_docente; ?>" class="btn btn-success btn-sm">Modificar</a>
-                                    <a href="#" class="btn btn-danger btn-sm" onclick="confirmDelete('eliminarDocente.php?id_docente=<?php echo $row['id_docente']; ?>')">Eliminar</a>
+                                    <a href="#" class="btn btn-danger btn-sm" onclick="confirmDelete('eliminarDocente.php?id_docente=<?php echo $id_docente; ?>')">Eliminar</a>
                                 </div>
                             </td>
                         </tr>

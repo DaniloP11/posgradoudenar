@@ -21,7 +21,7 @@ if (!$conexion) {
 }
 
 // Obtener los datos del docente
-$sql = "SELECT id_docente, nombre, apellido, correo, telefono, direccion, foto, formacion_pregrado, formacion_posgrado, areas_conocimiento, id_programa FROM docentes WHERE id_docente = ?";
+$sql = "SELECT id_docente, nombre, identificacion, direccion, telefono, correo, foto, formacion_pregrado, formacion_posgrado, areas_conocimiento FROM docentes WHERE id_docente = ?";
 $stmt = mysqli_prepare($conexion, $sql);
 mysqli_stmt_bind_param($stmt, 'i', $id_docente);
 mysqli_stmt_execute($stmt);
@@ -37,14 +37,13 @@ $docente = mysqli_fetch_assoc($result);
 // Manejo de la actualización de datos
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nombre = $_POST['nombre'];
-    $apellido = $_POST['apellido'];
+    $identificacion = $_POST['identificacion'];
     $correo = $_POST['correo'];
     $telefono = $_POST['telefono'];
     $direccion = $_POST['direccion'];
     $formacion_pregrado = $_POST['formacion_pregrado'];
     $formacion_posgrado = $_POST['formacion_posgrado'];
     $areas_conocimiento = $_POST['areas_conocimiento'];
-    $id_programa = $_POST['id_programa'];
 
     // Manejo de la fotografía
     $foto = $docente['foto']; // Mantener la foto existente por defecto
@@ -63,22 +62,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Actualizar los datos del docente
-    $updateSql = "UPDATE docentes SET nombre = ?, apellido = ?, correo = ?, telefono = ?, direccion = ?, foto = ?, formacion_pregrado = ?, formacion_posgrado = ?, areas_conocimiento = ?, id_programa = ? WHERE id_docente = ?";
+    $updateSql = "UPDATE docentes SET nombre = ?, identificacion = ?, correo = ?, telefono = ?, direccion = ?, foto = ?, formacion_pregrado = ?, formacion_posgrado = ?, areas_conocimiento = ? WHERE id_docente = ?";
     $stmt = mysqli_prepare($conexion, $updateSql);
-    mysqli_stmt_bind_param($stmt, 'ssssssssssi', $nombre, $apellido, $correo, $telefono, $direccion, $foto, $formacion_pregrado, $formacion_posgrado, $areas_conocimiento, $id_programa, $id_docente);
-
-    if (mysqli_stmt_execute($stmt)) {
-        echo "<script>alert('Docente actualizado correctamente');</script>";
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, 'sssssssssi', $nombre, $identificacion, $correo, $telefono, $direccion, $foto, $formacion_pregrado, $formacion_posgrado, $areas_conocimiento, $id_docente);
+        if (mysqli_stmt_execute($stmt)) {
+            echo "<script>alert('Docente actualizado correctamente');</script>";
+        } else {
+            echo "<script>alert('Error al actualizar el docente');</script>";
+        }
+        mysqli_stmt_close($stmt);
     } else {
-        echo "<script>alert('Error al actualizar el docente');</script>";
+        echo "<script>alert('Error al preparar la consulta');</script>";
     }
-    
-    mysqli_stmt_close($stmt);
 }
-
-// Obtener los programas para el select
-$programasSql = "SELECT id_programa, nombre_programa FROM programas";
-$programasResult = mysqli_query($conexion, $programasSql);
 
 mysqli_close($conexion);
 ?>
@@ -177,18 +174,12 @@ mysqli_close($conexion);
                             <div class="col mx-5 px-5">
                                 <div class="row mb-3">
                                     <div class="col">
-                                        <label for="id_docente" class="form-label">ID Docente</label>
-                                        <input type="text" class="form-control" id="id_docente" name="id_docente" value="<?php echo htmlspecialchars($docente['id_docente']); ?>" readonly>
-                                    </div>
-                                </div>
-                                <div class="row mb-3">
-                                    <div class="col">
                                         <label for="nombre" class="form-label">Nombre</label>
                                         <input type="text" class="form-control" id="nombre" name="nombre" value="<?php echo htmlspecialchars($docente['nombre']); ?>">
                                     </div>
                                     <div class="col">
-                                        <label for="apellido" class="form-label">Apellido</label>
-                                        <input type="text" class="form-control" id="apellido" name="apellido" value="<?php echo htmlspecialchars($docente['apellido']); ?>">
+                                        <label for="identificacion" class="form-label">Identificación</label>
+                                        <input type="text" class="form-control" id="identificacion" name="identificacion" value="<?php echo htmlspecialchars($docente['identificacion']); ?>">
                                     </div>
                                 </div>
                                 <div class="row mb-3">
@@ -232,24 +223,12 @@ mysqli_close($conexion);
                                         <input type="text" class="form-control" id="areas_conocimiento" name="areas_conocimiento" value="<?php echo htmlspecialchars($docente['areas_conocimiento']); ?>">
                                     </div>
                                 </div>
-                                <!-- Selección del programa -->
-                                <div class="row mb-3">
-                                    <div class="col">
-                                        <label for="id_programa" class="form-label">Programa</label>
-                                        <select class="form-control" id="id_programa" name="id_programa">
-                                            <option value="">Seleccionar programa</option>
-                                            <?php
-                                            while ($row = mysqli_fetch_assoc($programasResult)) {
-                                                $selected = ($row['id_programa'] == $docente['id_programa']) ? 'selected' : '';
-                                                echo "<option value='{$row['id_programa']}' $selected>{$row['nombre_programa']}</option>";
-                                            }
-                                            ?>
-                                        </select>
-                                    </div>
+                                <br>
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button class="btn btn-primary" type="submit">Actualizar</button>
+                                    <a href="listarDocente.php" class="btn btn-secondary">Cancelar</a>
                                 </div>
-                                <div class="text-center">
-                                    <button type="submit" class="btn btn-primary">Actualizar Docente</button>
-                                </div>
+                                <br><br>
                             </div>
                         </div>
                     </form>

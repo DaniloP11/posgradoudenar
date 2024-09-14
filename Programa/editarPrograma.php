@@ -21,39 +21,36 @@ if (!$programa) {
 }
 
 if (!empty($_POST)) {
-    if (empty($_POST['nombre']) || empty($_POST['codigo_SNIES']) || empty($_POST['descripcion']) || empty($_POST['correo_contacto']) || empty($_POST['telefono_contacto']) || empty($_POST['lineas_trabajo']) || empty($_POST['id_coordinador']) || empty($_POST['resolucion']) || empty($_POST['fecha_generacion'])) {
+    if (empty($_POST['codigo_SNIES']) || empty($_POST['descripcion']) || empty($_POST['lineas_trabajo']) || empty($_POST['id_coordinador']) || empty($_POST['resolucion']) || empty($_POST['fecha_generacion'])) {
         ?>
         <script>
             alert("Todos los campos obligatorios deben estar llenos");
         </script>
         <?php
     } else {
-        $nombre = $_POST['nombre'];
         $codigo_SNIES = $_POST['codigo_SNIES'];
         $descripcion = $_POST['descripcion'];
-        $correo_contacto = $_POST['correo_contacto'];
-        $telefono_contacto = $_POST['telefono_contacto'];
         $lineas_trabajo = $_POST['lineas_trabajo'];
         $id_coordinador = $_POST['id_coordinador'];
         $resolucion = $_POST['resolucion'];
         $fecha_generacion = $_POST['fecha_generacion'];
 
-         // Manejar la carga del archivo de logo
-         $logo = $programa['logo']; // Mantener el logo actual si no se sube uno nuevo
-         $upload_dir = '../Programa/uploads/'; // Ruta relativa a la carpeta 'Programa'
- 
-            if (isset($_FILES['logo']) && $_FILES['logo']['error'] == 0) {
-                // Asegúrate de que el directorio de carga existe
-                    if (!is_dir($upload_dir)) {
-                    mkdir($upload_dir, 0777, true);
-                    }
-    
-                $logo_path = $upload_dir . basename($_FILES['logo']['name']);
-                move_uploaded_file($_FILES['logo']['tmp_name'], $logo_path);
-                $logo = 'uploads/' . basename($_FILES['logo']['name']); // La ruta relativa para la base de datos
+        // Manejar la carga del archivo de logo
+        $logo = $programa['logo']; // Mantener el logo actual si no se sube uno nuevo
+        $upload_dir = '../Programa/uploads/'; // Ruta relativa a la carpeta 'Programa'
+
+        if (isset($_FILES['logo']) && $_FILES['logo']['error'] == 0) {
+            // Asegúrate de que el directorio de carga existe
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
             }
 
-        $query_update_programa = mysqli_query($conexion, "UPDATE programas SET nombre_programa = '$nombre', codigo_SNIES = '$codigo_SNIES', descripcion = '$descripcion', logo = '$logo', correo_contacto = '$correo_contacto', telefono_contacto = '$telefono_contacto', lineas_trabajo = '$lineas_trabajo', id_coordinador = '$id_coordinador', resolucion = '$resolucion', fecha_generacion = '$fecha_generacion' WHERE id_programa = '$id_programa'");
+            $logo_path = $upload_dir . basename($_FILES['logo']['name']);
+            move_uploaded_file($_FILES['logo']['tmp_name'], $logo_path);
+            $logo = 'uploads/' . basename($_FILES['logo']['name']); // La ruta relativa para la base de datos
+        }
+
+        $query_update_programa = mysqli_query($conexion, "UPDATE programas SET codigo_SNIES = '$codigo_SNIES', descripcion = '$descripcion', logo = '$logo', lineas_trabajo = '$lineas_trabajo', id_coordinador = '$id_coordinador', resolucion = '$resolucion', fecha_generacion = '$fecha_generacion' WHERE id_programa = '$id_programa'");
 
         if ($query_update_programa) {
             ?>
@@ -71,7 +68,6 @@ if (!empty($_POST)) {
         }
     }
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -95,13 +91,11 @@ if (!empty($_POST)) {
 <body>
 
 <div class="col-3">
-
     <nav class="navbar navbar-dark bg-dark fixed-top">
         <div class="container-fluid">
             <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar" aria-controls="offcanvasDarkNavbar">
                 <span class="navbar-toggler-icon"></span>
             </button>
-
             <div class="btn-group">
                 <button type="button" class="btn btn-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                     Sesión Administrador
@@ -110,13 +104,11 @@ if (!empty($_POST)) {
                     <li><a class="dropdown-item" href="../index.html">Cerrar sesión</a></li>
                 </ul>
             </div>
-
             <div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="offcanvasDarkNavbar" aria-labelledby="offcanvasDarkNavbarLabel">
                 <div class="offcanvas-header">
                     <h5 class="offcanvas-title" id="offcanvasDarkNavbarLabel">Administrador</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 </div>
-
                 <div class="offcanvas-body">
                     <ul class="navbar-nav justify-content-start flex-grow-1 pe-3">
                         <li class="nav-item">
@@ -133,7 +125,6 @@ if (!empty($_POST)) {
             </div>
         </div>
     </nav>
-
 </div>
 
 <div class="form_registro">
@@ -148,18 +139,6 @@ if (!empty($_POST)) {
                             <div class="col mx-5 px-5">
                                 <div class="row mb-3">
                                     <div class="col">
-                                        <label for="id_programa" class="form-label">ID Programa</label>
-                                        <input type="text" class="form-control" id="id_programa" name="id_programa" value="<?php echo htmlspecialchars($programa['id_programa']); ?>" readonly>
-                                    </div>
-                                </div>
-                                <div class="row mb-3">
-                                    <div class="col">
-                                        <label for="nombre" class="form-label">Nombre</label>
-                                        <input type="text" class="form-control" id="nombre" name="nombre" value="<?php echo htmlspecialchars($programa['nombre_programa']); ?>">
-                                    </div>
-                                </div>
-                                <div class="row mb-3">
-                                    <div class="col">
                                         <label for="codigo_SNIES" class="form-label">Código SNIES</label>
                                         <input type="text" class="form-control" id="codigo_SNIES" name="codigo_SNIES" value="<?php echo htmlspecialchars($programa['codigo_SNIES']); ?>">
                                     </div>
@@ -168,16 +147,6 @@ if (!empty($_POST)) {
                                     <div class="col">
                                         <label for="descripcion" class="form-label">Descripción</label>
                                         <textarea class="form-control" id="descripcion" name="descripcion" rows="3"><?php echo htmlspecialchars($programa['descripcion']); ?></textarea>
-                                    </div>
-                                </div>
-                                <div class="row mb-3">
-                                    <div class="col">
-                                        <label for="correo_contacto" class="form-label">Correo de Contacto</label>
-                                        <input type="email" class="form-control" id="correo_contacto" name="correo_contacto" value="<?php echo htmlspecialchars($programa['correo_contacto']); ?>">
-                                    </div>
-                                    <div class="col">
-                                        <label for="telefono_contacto" class="form-label">Teléfono de Contacto</label>
-                                        <input type="text" class="form-control" id="telefono_contacto" name="telefono_contacto" value="<?php echo htmlspecialchars($programa['telefono_contacto']); ?>">
                                     </div>
                                 </div>
                                 <div class="row mb-3">
@@ -191,16 +160,30 @@ if (!empty($_POST)) {
                                         <label for="id_coordinador" class="form-label">Coordinador</label>
                                         <select class="form-select" id="id_coordinador" name="id_coordinador">
                                             <?php
-                                            // Obtener coordinadores de la base de datos
-                                            $query_coordinadores = mysqli_query($conexion, "SELECT id_coordinador, nombre, apellido FROM coordinadores");
-                                            while ($coordinador = mysqli_fetch_assoc($query_coordinadores)) {
-                                                $selected = ($coordinador['id_coordinador'] == $programa['id_coordinador']) ? 'selected' : '';
-                                                echo "<option value=\"{$coordinador['id_coordinador']}\" $selected>{$coordinador['nombre']} {$coordinador['apellido']}</option>";
+                                            // Obtener la lista de coordinadores de la base de datos
+                                            $query_coordinadores = mysqli_query($conexion, "SELECT id_coordinador, nombre FROM coordinadores");
+
+                                            // Verificar si la consulta fue exitosa
+                                            if ($query_coordinadores) {
+                                                // Recorrer la lista de coordinadores y crear las opciones del select
+                                                while ($coordinador = mysqli_fetch_assoc($query_coordinadores)) {
+                                                    // Determinar si el coordinador actual es el seleccionado
+                                                    $selected = ($coordinador['id_coordinador'] == $programa['id_coordinador']) ? 'selected' : '';
+                                                    
+                                                    // Imprimir la opción del select
+                                                    echo "<option value=\"{$coordinador['id_coordinador']}\" $selected>";
+                                                    echo htmlspecialchars($coordinador['nombre']);
+                                                    echo "</option>";
+                                                }
+                                            } else {
+                                                // Mensaje de error si la consulta falla
+                                                echo "<option value=\"\">Error al cargar coordinadores</option>";
                                             }
                                             ?>
                                         </select>
                                     </div>
                                 </div>
+
                                 <div class="row mb-3">
                                     <div class="col">
                                         <label for="resolucion" class="form-label">Resolución</label>
@@ -220,9 +203,12 @@ if (!empty($_POST)) {
                                         <?php } ?>
                                     </div>
                                 </div>
-                                <div class="text-center">
-                                    <button type="submit" class="btn btn-primary">Actualizar Programa</button>
+                                <br>
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button class="btn btn-primary" type="submit">Actualizar</button>
+                                    <a href="listarPrograma.php" class="btn btn-secondary">Cancelar</a>
                                 </div>
+                                <br><br> 
                             </div>
                         </div>
                     </form>

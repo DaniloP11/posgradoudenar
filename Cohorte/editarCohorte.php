@@ -8,20 +8,21 @@ if (!isset($_SESSION["email"]) || !isset($_SESSION["rol"])) {
     exit();
 }
 
+// Obtener el ID del cohorte desde la URL
 $id_cohorte = $_GET['id'] ?? null;
 if (!$id_cohorte) {
     die("ID de cohorte no proporcionado");
 }
 
+// Manejo del formulario
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Verificar que todos los campos obligatorios están llenos
-    $requiredFields = ['id_cohorte', 'fecha_inicio', 'fecha_fin', 'id_programa'];
+    $requiredFields = ['fecha_inicio', 'fecha_fin', 'id_programa'];
     $missingFields = array_filter($requiredFields, fn($field) => empty($_POST[$field]));
 
     if ($missingFields) {
         echo "<script>alert('Todos los campos obligatorios deben estar llenos');</script>";
     } else {
-        $id_cohorte = $_POST['id_cohorte'];
         $fecha_inicio = $_POST['fecha_inicio'];
         $fecha_fin = $_POST['fecha_fin'];
         $id_programa = $_POST['id_programa'];
@@ -64,13 +65,13 @@ mysqli_stmt_fetch($stmt);
 mysqli_stmt_close($stmt);
 
 // Obtener la lista de programas
-$stmt = mysqli_prepare($conexion, "SELECT id_programa, nombre_programa FROM programas");
+$stmt = mysqli_prepare($conexion, "SELECT id_programa, descripcion FROM programas");
 mysqli_stmt_execute($stmt);
-mysqli_stmt_bind_result($stmt, $id_programa, $nombre_programa);
+mysqli_stmt_bind_result($stmt, $programa_id, $descripcion);
 
 $programas = [];
 while (mysqli_stmt_fetch($stmt)) {
-    $programas[] = ['id_programa' => $id_programa, 'nombre_programa' => $nombre_programa];
+    $programas[] = ['id_programa' => $programa_id, 'descripcion' => $descripcion];
 }
 
 mysqli_stmt_close($stmt);
@@ -85,10 +86,9 @@ mysqli_close($conexion);
     <title>Editar Cohorte</title>
     <link rel="icon" type="image/x-icon" href="../img/icon.png">
     <link rel="stylesheet" href="../css/style.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.5/dist/umd/popper.min.js" integrity="sha384-Xe+8cL9oJa6tN/veChSP7q+mnSPaj5Bcu9mPX5F5xIGE0DVittaqT5lorf0EI7Vk" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.min.js" integrity="sha384-ODmDIVzN+pFdexxHEHFBQH3/9/vQ9uori45z4JjnFsRydbmQbmL5t1tQ0culUzyK" crossorigin="anonymous"></script>
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.5/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.min.js"></script>
     <style>
         body {
             background-image: url(../img/font.png);
@@ -99,7 +99,6 @@ mysqli_close($conexion);
 <body>
 
 <div class="col-3">
-
     <nav class="navbar navbar-dark bg-dark fixed-top">
         <div class="container-fluid">
             <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar" aria-controls="offcanvasDarkNavbar">
@@ -159,7 +158,6 @@ mysqli_close($conexion);
             </div>
         </div>
     </nav>
-
 </div>
 
 <div class="form_registro">
@@ -168,16 +166,10 @@ mysqli_close($conexion);
         <h3 align="center">EDITAR COHORTE</h3>
         <div class="row">
             <div class="col py-5">
-                <div class="mx-5 bg-light" style="border-radius: 2%; ">
+                <div class="mx-5 bg-light" style="border-radius: 2%;">
                     <form action="" method="post">
                         <div class="row mb-3 needs-validation" novalidate>
                             <div class="col mx-5 px-5">
-                                <div class="row mb-3">
-                                    <div class="col">
-                                        <label for="id_cohorte" class="form-label">ID Cohorte</label>
-                                        <input type="number" class="form-control" id="id_cohorte" name="id_cohorte" value="<?php echo htmlspecialchars($id_cohorte); ?>" readonly>
-                                    </div>
-                                </div>
                                 <div class="row mb-3">
                                     <div class="col">
                                         <label for="fecha_inicio" class="form-label">Fecha de Inicio</label>
@@ -195,7 +187,7 @@ mysqli_close($conexion);
                                             <option value="">Seleccionar Programa</option>
                                             <?php foreach ($programas as $programa): ?>
                                                 <option value="<?php echo htmlspecialchars($programa['id_programa']); ?>" <?php echo $programa['id_programa'] == $id_programa ? 'selected' : ''; ?>>
-                                                    <?php echo htmlspecialchars($programa['nombre_programa']); ?>
+                                                    <?php echo htmlspecialchars($programa['descripcion']); ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
@@ -204,7 +196,7 @@ mysqli_close($conexion);
                                 <br>
                                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                                     <button class="btn btn-primary" type="submit">Actualizar</button>
-                                    <button class="btn btn-secondary" type="reset">Cancelar</button>
+                                    <a href="listarCohorte.php" class="btn btn-secondary">Cancelar</a>
                                 </div>
                                 <br><br>
                             </div>

@@ -13,8 +13,8 @@ if (!$conexion) {
     die("Error de conexión a la base de datos");
 }
 
-// Consulta para obtener la lista de cohortes
-$sql = "SELECT cohortes.id_cohorte, cohortes.fecha_inicio, cohortes.fecha_fin, programas.nombre_programa 
+// Consulta para obtener la lista de cohortes y la descripción del programa
+$sql = "SELECT cohortes.id_cohorte, cohortes.fecha_inicio, cohortes.fecha_fin, programas.descripcion 
         FROM cohortes 
         JOIN programas ON cohortes.id_programa = programas.id_programa";
 $query = mysqli_query($conexion, $sql);
@@ -49,7 +49,6 @@ if (!$query) {
 <body>
 
 <div class="col-3">
-
     <nav class="navbar navbar-dark bg-dark fixed-top">
         <div class="container-fluid">
             <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar" aria-controls="offcanvasDarkNavbar">
@@ -109,7 +108,6 @@ if (!$query) {
             </div>
         </div>
     </nav>
-
 </div>
 
 <div class="container mt-5 pt-5">
@@ -123,25 +121,24 @@ if (!$query) {
                             <th scope="col">ID Cohorte</th>
                             <th scope="col">Fecha de Inicio</th>
                             <th scope="col">Fecha de Fin</th>
-                            <th scope="col">Programa</th>
+                            <th scope="col">Descripción del Programa</th>
                             <th scope="col">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php
-                        $i = 0;
                         while ($row = mysqli_fetch_array($query)) {
-                            $i++;
                         ?>
                         <tr>
                             <td><?php echo htmlspecialchars($row['id_cohorte']); ?></td>
                             <td><?php echo htmlspecialchars($row['fecha_inicio']); ?></td>
                             <td><?php echo htmlspecialchars($row['fecha_fin']); ?></td>
-                            <td><?php echo htmlspecialchars($row['nombre_programa']); ?></td>
+                            <td><?php echo htmlspecialchars($row['descripcion']); ?></td>
                             <td>
                                 <div class="btn-group">
                                     <a href="editarCohorte.php?id=<?php echo $row['id_cohorte']; ?>" class="btn btn-success btn-sm">Modificar</a>
-                                    <a href="eliminarCohorte.php?id_cohorte=<?php echo urlencode($row['id_cohorte']); ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que deseas eliminar este programa?')">Eliminar</a>
+                                    <a href="eliminarCohorte.php?id_cohorte=<?php echo urlencode($row['id_cohorte']); ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que deseas eliminar este cohorte?')">Eliminar</a>
+                                </div>
                             </td>
                         </tr>
                         <?php
@@ -164,15 +161,9 @@ if (!$query) {
                     </li>
                 </ul>
             </nav>
-
         </div>
     </div>
 </div>
 
 </body>
-
 </html>
-
-<?php
-mysqli_close($conexion);
-?>

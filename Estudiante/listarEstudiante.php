@@ -13,8 +13,8 @@ if (!$conexion) {
     die("Error de conexión a la base de datos");
 }
 
-// Consulta para obtener la lista de estudiantes con el nombre del programa
-$sql = "SELECT e.*, p.nombre_programa 
+// Consulta para obtener la lista de estudiantes con la descripción del programa
+$sql = "SELECT e.*, p.descripcion 
         FROM estudiantes e
         JOIN programas p ON e.id_programa = p.id_programa";
 $query = mysqli_query($conexion, $sql);
@@ -122,7 +122,7 @@ if (!$query) {
                         <tr>
                             <th scope="col">ID Estudiante</th>
                             <th scope="col">Nombre</th>
-                            <th scope="col">Apellido</th>
+                            <th scope="col">Identificación</th>
                             <th scope="col">Código Estudiantil</th>
                             <th scope="col">Correo</th>
                             <th scope="col">Teléfono</th>
@@ -135,18 +135,16 @@ if (!$query) {
                             <th scope="col">Fotografía</th>
                             <th scope="col">Fecha de Ingreso</th>
                             <th scope="col">Fecha de Egreso</th>
-                            <th scope="col">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Programa&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                            <th scope="col">Programa</th>
                             <th scope="col">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php
-                        while ($row = mysqli_fetch_array($query)) {
-                        ?>
+                        <?php while ($row = mysqli_fetch_array($query)) { ?>
                         <tr>
                             <td><?php echo htmlspecialchars($row['id_estudiante']); ?></td>
                             <td><?php echo htmlspecialchars($row['nombre']); ?></td>
-                            <td><?php echo htmlspecialchars($row['apellido']); ?></td>
+                            <td><?php echo htmlspecialchars($row['identificacion']); ?></td>
                             <td><?php echo htmlspecialchars($row['codigo_estudiantil']); ?></td>
                             <td><?php echo htmlspecialchars($row['correo']); ?></td>
                             <td><?php echo htmlspecialchars($row['telefono']); ?></td>
@@ -156,21 +154,24 @@ if (!$query) {
                             <td><?php echo htmlspecialchars($row['semestre']); ?></td>
                             <td><?php echo htmlspecialchars($row['estado_civil']); ?></td>
                             <td><?php echo htmlspecialchars($row['id_cohorte']); ?></td>
-                            <td><img src="uploads/<?php echo htmlspecialchars($row['fotografia']); ?>" alt="Fotografía" style="width: 60px; height: auto;"></td>
+                            <td>
+                                <?php if ($row['fotografia']): ?>
+                                    <img src="uploads/<?php echo htmlspecialchars($row['fotografia']); ?>" alt="Fotografía" style="width: 60px; height: auto;">
+                                <?php else: ?>
+                                    No disponible
+                                <?php endif; ?>
+                            </td>
                             <td><?php echo htmlspecialchars($row['fecha_ingreso']); ?></td>
                             <td><?php echo htmlspecialchars($row['fecha_egreso']); ?></td>
-                            <td><?php echo htmlspecialchars($row['nombre_programa']); ?></td>
+                            <td><?php echo htmlspecialchars($row['descripcion']); ?></td>
                             <td>
-                            <div class="btn-group">
-                                <a href="editarEstudiante.php?id=<?php echo $row['id_estudiante']; ?>" class="btn btn-success btn-sm">Modificar</a>
-                                <a href="eliminarEstudiante.php?id_estudiante=<?php echo urlencode($row['id_estudiante']); ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que deseas eliminar este estudiante?')">Eliminar</a>
-                            </div>
-
+                                <div class="btn-group">
+                                    <a href="editarEstudiante.php?id=<?php echo $row['id_estudiante']; ?>" class="btn btn-success btn-sm">Modificar</a>
+                                    <a href="eliminarEstudiante.php?id_estudiante=<?php echo urlencode($row['id_estudiante']); ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que deseas eliminar este estudiante?')">Eliminar</a>
+                                </div>
                             </td>
                         </tr>
-                        <?php
-                        }
-                        ?>
+                        <?php } ?>
                     </tbody>
                 </table>
             </div>

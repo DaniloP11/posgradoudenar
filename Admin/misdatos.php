@@ -15,7 +15,6 @@ if ($mostrar = mysqli_fetch_array($query_admin)) {
     // Almacenar los datos del administrador en variables
     $nombre = $mostrar['admin_nombre'];
     $apellido = $mostrar['admin_apellido'];
-    $celular = $mostrar['admin_usuario']; // Reemplaza por el dato que almacenes como número de teléfono
     $correo = $mostrar['admin_email'];
 } else {
     // Si no se encuentra el administrador, redirigir o mostrar un mensaje de error
@@ -120,14 +119,6 @@ if ($mostrar = mysqli_fetch_array($query_admin)) {
           </div>
 
           <div class="row align-items-start">
-
-            <div class="col">
-              <div class="input-group input-group-sm mb-3">
-                <span class="input-group-text" id="inputGroup-sizing-sm">Celular</span>
-                <input type="text" class="form-control" name="txtcel" value="<?php echo $celular; ?>" required disabled>
-              </div>
-
-            </div>
             <div class="col">
               <div class="input-group input-group-sm mb-3">
                 <span class="input-group-text" id="inputGroup-sizing-sm">Correo electrónico</span>

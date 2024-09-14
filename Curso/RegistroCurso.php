@@ -16,7 +16,7 @@ if (!$conexion) {
 
 // Obtener docentes
 $docentes = [];
-$docenteQuery = "SELECT id_docente, CONCAT(nombre, ' ', apellido) AS nombre_completo FROM docentes";
+$docenteQuery = "SELECT id_docente, nombre FROM docentes";
 $docenteResult = mysqli_query($conexion, $docenteQuery);
 if ($docenteResult) {
     while ($row = mysqli_fetch_assoc($docenteResult)) {
@@ -24,9 +24,9 @@ if ($docenteResult) {
     }
 }
 
-// Obtener programas (suponiendo que existe una tabla `programas`)
+// Obtener programas (ajustar según la estructura de tu tabla)
 $programas = [];
-$programaQuery = "SELECT id_programa, nombre_programa FROM programas";
+$programaQuery = "SELECT id_programa, descripcion FROM programas"; // Ajustar el nombre de la columna
 $programaResult = mysqli_query($conexion, $programaQuery);
 if ($programaResult) {
     while ($row = mysqli_fetch_assoc($programaResult)) {
@@ -36,35 +36,24 @@ if ($programaResult) {
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Verificar que todos los campos obligatorios están llenos
-    $requiredFields = ['id_curso', 'nombre_curso', 'id_programa', 'id_docente'];
+    $requiredFields = ['nombre_curso', 'id_programa', 'id_docente'];
     $missingFields = array_filter($requiredFields, fn($field) => empty($_POST[$field]));
 
     if ($missingFields) {
         echo "<script>alert('Todos los campos obligatorios deben estar llenos');</script>";
     } else {
-        $id_curso = $_POST['id_curso'];
         $nombre_curso = $_POST['nombre_curso'];
         $id_programa = $_POST['id_programa'];
         $id_docente = $_POST['id_docente'];
 
-        // Verificar si el ID del curso ya existe
-        $stmt = mysqli_prepare($conexion, "SELECT id_curso FROM cursos WHERE id_curso = ?");
-        mysqli_stmt_bind_param($stmt, 'i', $id_curso);
-        mysqli_stmt_execute($stmt);
-        mysqli_stmt_store_result($stmt);
+        // Insertar nuevo curso
+        $stmt = mysqli_prepare($conexion, "INSERT INTO cursos (nombre_curso, id_programa, id_docente) VALUES (?, ?, ?)");
+        mysqli_stmt_bind_param($stmt, 'sis', $nombre_curso, $id_programa, $id_docente);
 
-        if (mysqli_stmt_num_rows($stmt) > 0) {
-            echo "<script>alert('El ID del curso ya existe');</script>";
+        if (mysqli_stmt_execute($stmt)) {
+            echo "<script>alert('Curso creado correctamente');</script>";
         } else {
-            // Insertar nuevo curso
-            $stmt = mysqli_prepare($conexion, "INSERT INTO cursos (id_curso, nombre_curso, id_programa, id_docente) VALUES (?, ?, ?, ?)");
-            mysqli_stmt_bind_param($stmt, 'isis', $id_curso, $nombre_curso, $id_programa, $id_docente);
-
-            if (mysqli_stmt_execute($stmt)) {
-                echo "<script>alert('Curso creado correctamente');</script>";
-            } else {
-                echo "<script>alert('Error al crear el curso');</script>";
-            }
+            echo "<script>alert('Error al crear el curso');</script>";
         }
 
         // Cerrar la declaración y la conexión
@@ -172,15 +161,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <div class="col mx-5 px-5">
                                 <div class="row mb-3">
                                     <div class="col">
-                                        <label for="id_curso" class="form-label">ID Curso</label>
-                                        <input type="number" class="form-control" id="id_curso" name="id_curso" required>
-                                        <div class="invalid-feedback">
-                                            Por favor ingrese un ID de curso válido.
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row mb-3">
-                                    <div class="col">
                                         <label for="nombre_curso" class="form-label">Nombre del Curso</label>
                                         <input type="text" class="form-control" id="nombre_curso" name="nombre_curso" required>
                                         <div class="invalid-feedback">
@@ -195,7 +175,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                             <option value="" disabled selected>Seleccione un programa</option>
                                             <?php foreach ($programas as $programa): ?>
                                                 <option value="<?php echo $programa['id_programa']; ?>">
-                                                    <?php echo $programa['nombre_programa']; ?>
+                                                    <?php echo htmlspecialchars($programa['descripcion']); ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
@@ -211,7 +191,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                             <option value="" disabled selected>Seleccione un docente</option>
                                             <?php foreach ($docentes as $docente): ?>
                                                 <option value="<?php echo $docente['id_docente']; ?>">
-                                                    <?php echo $docente['nombre_completo']; ?>
+                                                    <?php echo htmlspecialchars($docente['nombre']); ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
@@ -220,12 +200,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         </div>
                                     </div>
                                 </div>
-                                <div class="text-center">
-                                    <button type="submit" class="btn btn-primary">Registrar</button>
+                                <br>
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button class="btn btn-primary" type="submit">Registrar</button>
+                                    <button id="cancelar-btn" class="btn btn-secondary" type="button">Cancelar</button>
                                 </div>
+                                <br><br>
                             </div>
                         </div>
-                        <br>
                     </form>
                 </div>
             </div>
@@ -233,6 +215,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
 </div>
 
-<script src="../js/validacion.js"></script>
+<script>
+document.getElementById('cancelar-btn').addEventListener('click', function() {
+    // Obtén el rol del usuario desde una variable PHP insertada en JavaScript
+    var rol = "<?php echo $_SESSION['rol']; ?>";
+
+    var url = '';
+    switch (rol) {
+        case '1':
+            url = '../Admin/UsuariosAdmin.html';
+            break;
+        case '2':
+            url = '../Asistente/UsuariosAsiste.html';
+            break;
+        case '3':
+            url = '../Coordinador/UsuariosCoord.html';
+            break;
+        default:
+            url = '../index.html'; // Redirigir a una página predeterminada si no se encuentra el rol
+            break;
+    }
+
+    window.location.href = url;
+});
+</script>
+
 </body>
 </html>

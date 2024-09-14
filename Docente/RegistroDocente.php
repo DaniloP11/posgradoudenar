@@ -10,23 +10,23 @@ if (!isset($_SESSION["email"]) || !isset($_SESSION["rol"])) {
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Verificar que todos los campos obligatorios están llenos
-    $requiredFields = ['id_docente', 'nombre', 'apellido', 'correo', 'telefono', 'direccion', 'formacion_pregrado', 'formacion_posgrado', 'areas_conocimiento'];
+    $requiredFields = ['nombre', 'identificacion', 'direccion', 'telefono', 'correo', 'formacion_pregrado', 'formacion_posgrado', 'areas_conocimiento'];
     $missingFields = array_filter($requiredFields, fn($field) => empty($_POST[$field]));
 
     if ($missingFields) {
         echo "<script>alert('Todos los campos obligatorios deben estar llenos');</script>";
     } else {
-        $id_docente = $_POST['id_docente'];
         $nombre = $_POST['nombre'];
-        $apellido = $_POST['apellido'];
-        $correo = $_POST['correo'];
-        $telefono = $_POST['telefono'];
+        $identificacion = $_POST['identificacion'];
         $direccion = $_POST['direccion'];
+        $telefono = $_POST['telefono'];
+        $correo = $_POST['correo'];
         $formacion_pregrado = $_POST['formacion_pregrado'];
         $formacion_posgrado = $_POST['formacion_posgrado'];
         $areas_conocimiento = $_POST['areas_conocimiento'];
 
         // Manejo de la fotografía
+        $foto = null;
         if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
             $uploadDir = 'uploads/';
             
@@ -46,7 +46,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
         
-
         // Conexión a la base de datos
         $conexion = conexion();
         if (!$conexion) {
@@ -64,8 +63,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo "<script>alert('El correo ya existe');</script>";
         } else {
             // Insertar nuevo docente
-            $stmt = mysqli_prepare($conexion, "INSERT INTO docentes (id_docente, nombre, apellido, correo, telefono, direccion, foto, formacion_pregrado, formacion_posgrado, areas_conocimiento) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            mysqli_stmt_bind_param($stmt, 'ssssssssss', $id_docente, $nombre, $apellido, $correo, $telefono, $direccion, $foto, $formacion_pregrado, $formacion_posgrado, $areas_conocimiento);
+            $stmt = mysqli_prepare($conexion, "INSERT INTO docentes (nombre, identificacion, direccion, telefono, correo, foto, formacion_pregrado, formacion_posgrado, areas_conocimiento) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, 'sssssssss', $nombre, $identificacion, $direccion, $telefono, $correo, $foto, $formacion_pregrado, $formacion_posgrado, $areas_conocimiento);
 
             if (mysqli_stmt_execute($stmt)) {
                 echo "<script>alert('Docente creado correctamente');</script>";
@@ -175,37 +174,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <div class="col mx-5 px-5">
                                 <div class="row mb-3">
                                     <div class="col">
-                                        <label for="id_docente" class="form-label">ID Docente</label>
-                                        <input type="text" class="form-control" id="id_docente" name="id_docente">
-                                    </div>
-                                </div>
-                                <div class="row mb-3">
-                                    <div class="col">
                                         <label for="nombre" class="form-label">Nombre</label>
-                                        <input type="text" class="form-control" id="nombre" name="nombre">
+                                        <input type="text" class="form-control" id="nombre" name="nombre" required>
                                     </div>
                                     <div class="col">
-                                        <label for="apellido" class="form-label">Apellido</label>
-                                        <input type="text" class="form-control" id="apellido" name="apellido">
-                                    </div>
-                                </div>
-                                <div class="row mb-3">
-                                    <div class="col">
-                                        <label for="correo" class="form-label">Correo</label>
-                                        <input type="email" class="form-control" id="correo" name="correo">
-                                    </div>
-                                    <div class="col">
-                                        <label for="telefono" class="form-label">Teléfono</label>
-                                        <input type="text" class="form-control" id="telefono" name="telefono">
+                                        <label for="identificacion" class="form-label">Identificación</label>
+                                        <input type="text" class="form-control" id="identificacion" name="identificacion" required>
                                     </div>
                                 </div>
                                 <div class="row mb-3">
                                     <div class="col">
                                         <label for="direccion" class="form-label">Dirección</label>
-                                        <input type="text" class="form-control" id="direccion" name="direccion">
+                                        <input type="text" class="form-control" id="direccion" name="direccion" required>
+                                    </div>
+                                    <div class="col">
+                                        <label for="telefono" class="form-label">Teléfono</label>
+                                        <input type="text" class="form-control" id="telefono" name="telefono" required>
                                     </div>
                                 </div>
                                 <div class="row mb-3">
+                                    <div class="col">
+                                        <label for="correo" class="form-label">Correo</label>
+                                        <input type="email" class="form-control" id="correo" name="correo" required>
+                                    </div>
                                     <div class="col">
                                         <label for="foto" class="form-label">Foto</label>
                                         <input type="file" class="form-control" id="foto" name="foto">
@@ -214,39 +205,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <div class="row mb-3">
                                     <div class="col">
                                         <label for="formacion_pregrado" class="form-label">Formación de Pregrado</label>
-                                        <input type="text" class="form-control" id="formacion_pregrado" name="formacion_pregrado">
+                                        <input type="text" class="form-control" id="formacion_pregrado" name="formacion_pregrado" required>
                                     </div>
                                     <div class="col">
                                         <label for="formacion_posgrado" class="form-label">Formación de Posgrado</label>
-                                        <input type="text" class="form-control" id="formacion_posgrado" name="formacion_posgrado">
+                                        <input type="text" class="form-control" id="formacion_posgrado" name="formacion_posgrado" required>
                                     </div>
                                 </div>
                                 <div class="row mb-3">
                                     <div class="col">
                                         <label for="areas_conocimiento" class="form-label">Áreas de Conocimiento</label>
-                                        <input type="text" class="form-control" id="areas_conocimiento" name="areas_conocimiento">
+                                        <textarea class="form-control" id="areas_conocimiento" name="areas_conocimiento" rows="3" required></textarea>
                                     </div>
                                 </div>
-                                <!-- Selección del programa -->
-                                <div class="row mb-3">
-                                    <div class="col">
-                                        <label for="id_programa" class="form-label">Programa</label>
-                                        <select class="form-control" id="id_programa" name="id_programa">
-                                            <option value="">Seleccionar programa</option>
-                                            <?php
-                                            $conexion = conexion();
-                                            $result = mysqli_query($conexion, "SELECT id_programa, nombre_programa FROM programas");
-                                            while ($row = mysqli_fetch_assoc($result)) {
-                                                echo "<option value='{$row['id_programa']}'>{$row['nombre_programa']}</option>";
-                                            }
-                                            mysqli_close($conexion);
-                                            ?>
-                                        </select>
-                                    </div>
+                                <br>
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button class="btn btn-primary" type="submit">Registrar</button>
+                                    <button id="cancelar-btn" class="btn btn-secondary" type="button">Cancelar</button>
                                 </div>
-                                <div class="text-center">
-                                    <button type="submit" class="btn btn-primary">Registrar Docente</button>
-                                </div>
+                                <br><br>
                             </div>
                         </div>
                     </form>
@@ -255,6 +232,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     </div>
 </div>
+
+<script>
+document.getElementById('cancelar-btn').addEventListener('click', function() {
+    // Obtén el rol del usuario desde una variable PHP insertada en JavaScript
+    var rol = "<?php echo $_SESSION['rol']; ?>";
+
+    var url = '';
+    switch (rol) {
+        case '1':
+            url = '../Admin/UsuariosAdmin.html';
+            break;
+        case '2':
+            url = '../Asistente/UsuariosAsiste.html';
+            break;
+        case '3':
+            url = '../Coordinador/UsuariosCoord.html';
+            break;
+        default:
+            url = '../index.html'; // Redirigir a una página predeterminada si no se encuentra el rol
+            break;
+    }
+
+    window.location.href = url;
+});
+</script>
 
 </body>
 </html>

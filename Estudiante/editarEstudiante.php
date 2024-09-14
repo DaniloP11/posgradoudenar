@@ -2,6 +2,11 @@
 include "../complementos/conexion.php";
 session_start();
 
+// Inicializar variable de mensaje
+if (!isset($_SESSION['mensaje'])) {
+    $_SESSION['mensaje'] = '';
+}
+
 // Verificar que el usuario está logueado
 if (!isset($_SESSION["email"]) || !isset($_SESSION["rol"])) {
     header("Location: ../index.html");
@@ -35,7 +40,6 @@ if (isset($_GET['id'])) {
 // Procesar la actualización cuando se envía el formulario
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nombre = $_POST['nombre'];
-    $apellido = $_POST['apellido'];
     $codigo_estudiantil = $_POST['codigo_estudiantil'];
     $correo = $_POST['correo'];
     $telefono = $_POST['telefono'];
@@ -88,11 +92,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Actualizar los datos del estudiante en la base de datos
-    $stmt = mysqli_prepare($conexion, "UPDATE estudiantes SET nombre = ?, apellido = ?, codigo_estudiantil = ?, correo = ?, telefono = ?, direccion = ?, genero = ?, fecha_nacimiento = ?, semestre = ?, estado_civil = ?, id_cohorte = ?, fotografia = ?, fecha_ingreso = ?, fecha_egreso = ?, id_programa = ? WHERE id_estudiante = ?");
-    mysqli_stmt_bind_param($stmt, 'ssssssssissssssi', $nombre, $apellido, $codigo_estudiantil, $correo, $telefono, $direccion, $genero, $fecha_nacimiento, $semestre, $estado_civil, $id_cohorte, $fotografia, $fecha_ingreso, $fecha_egreso, $id_programa, $id_estudiante);
+    $stmt = mysqli_prepare($conexion, "UPDATE estudiantes SET nombre = ?, codigo_estudiantil = ?, correo = ?, telefono = ?, direccion = ?, genero = ?, fecha_nacimiento = ?, semestre = ?, estado_civil = ?, id_cohorte = ?, fotografia = ?, fecha_ingreso = ?, fecha_egreso = ?, id_programa = ? WHERE id_estudiante = ?");
+    mysqli_stmt_bind_param($stmt, 'sssssssssssssii', $nombre, $codigo_estudiantil, $correo, $telefono, $direccion, $genero, $fecha_nacimiento, $semestre, $estado_civil, $id_cohorte, $fotografia, $fecha_ingreso, $fecha_egreso, $id_programa, $id_estudiante);
 
     if (mysqli_stmt_execute($stmt)) {
-        echo "<script>alert('Estudiante actualizado correctamente');</script>";
+        $_SESSION['mensaje'] = 'Datos actualizados exitosamente';
         header("Location: listarEstudiante.php");
         exit();
     } else {
@@ -104,7 +108,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 // Cargar cohortes y programas para los dropdowns
 $cohortes_query = mysqli_query($conexion, "SELECT id_cohorte FROM cohortes");
-$programas_query = mysqli_query($conexion, "SELECT id_programa, nombre_programa FROM programas");
+$programas_query = mysqli_query($conexion, "SELECT id_programa, descripcion FROM programas");
 
 // Cerrar la conexión
 mysqli_close($conexion);
@@ -206,10 +210,7 @@ mysqli_close($conexion);
                                         <label for="nombre" class="form-label">Nombre</label>
                                         <input type="text" class="form-control" id="nombre" name="nombre" value="<?php echo htmlspecialchars($estudiante['nombre']); ?>" required>
                                     </div>
-                                    <div class="col">
-                                        <label for="apellido" class="form-label">Apellido</label>
-                                        <input type="text" class="form-control" id="apellido" name="apellido" value="<?php echo htmlspecialchars($estudiante['apellido']); ?>" required>
-                                    </div>
+                
                                 </div>
                                 <div class="row mb-3">
                                     <div class="col">
@@ -287,7 +288,7 @@ mysqli_close($conexion);
                                         <select class="form-select" id="id_programa" name="id_programa" required>
                                             <option value="">Seleccione un programa</option>
                                             <?php while ($row = mysqli_fetch_assoc($programas_query)) {
-                                                echo "<option value='{$row['id_programa']}'" . ($estudiante['id_programa'] == $row['id_programa'] ? ' selected' : '') . ">{$row['nombre_programa']}</option>";
+                                                echo "<option value='{$row['id_programa']}'" . ($estudiante['id_programa'] == $row['id_programa'] ? ' selected' : '') . ">{$row['descripcion']}</option>";
                                             } ?>
                                         </select>
                                     </div>

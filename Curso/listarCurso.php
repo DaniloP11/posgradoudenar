@@ -3,7 +3,7 @@ include "../complementos/conexion.php";
 session_start();
 
 // Verificar que el usuario está logueado
-if (!isset($_SESSION["email"]) || !isset($_SESSION["rol"])) {
+if (!isset($_SESSION["email"]) || !isset($_SESSION["rol"])) {  
     header("Location: ../index.html");
     exit();
 }
@@ -13,8 +13,8 @@ if (!$conexion) {
     die("Error de conexión a la base de datos");
 }
 
-// Consulta para obtener la lista de cursos
-$sql = "SELECT cursos.id_curso, cursos.nombre_curso, programas.nombre_programa, CONCAT(docentes.nombre, ' ', docentes.apellido) AS nombre_docente
+// Consulta para obtener la lista de cursos con descripción del programa y nombre del docente
+$sql = "SELECT cursos.id_curso, cursos.nombre_curso, programas.descripcion AS nombre_programa, docentes.nombre AS nombre_docente
         FROM cursos
         JOIN programas ON cursos.id_programa = programas.id_programa
         JOIN docentes ON cursos.id_docente = docentes.id_docente";
@@ -131,9 +131,7 @@ if (!$query) {
                     </thead>
                     <tbody>
                         <?php
-                        $i = 0;
                         while ($row = mysqli_fetch_array($query)) {
-                            $i++;
                         ?>
                         <tr>
                             <td><?php echo htmlspecialchars($row['id_curso']); ?></td>
@@ -143,7 +141,7 @@ if (!$query) {
                             <td>
                                 <div class="btn-group">
                                     <a href="editarCurso.php?id=<?php echo $row['id_curso']; ?>" class="btn btn-success btn-sm">Modificar</a>
-                                    <a href="eliminarCurso.php?id=1" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que deseas eliminar este curso?')">Eliminar</a>
+                                    <a href="eliminarCurso.php?id=<?php echo $row['id_curso']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que deseas eliminar este curso?')">Eliminar</a>
                                 </div>
                             </td>
                         </tr>

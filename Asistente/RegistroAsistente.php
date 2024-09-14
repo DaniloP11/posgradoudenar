@@ -3,7 +3,7 @@ include "../complementos/conexion.php";
 
 if (!empty($_POST)) {
     // Validación de campos obligatorios
-    if (empty($_POST['nombre']) || empty($_POST['apellido']) || empty($_POST['correo']) || empty($_POST['telefono']) || empty($_POST['direccion']) || empty($_POST['genero']) || empty($_POST['fecha_nacimiento']) || empty($_POST['contraseña']) || empty($_POST['id_programa']) || empty($_POST['id_coordinador'])) {
+    if (empty($_POST['nombre']) || empty($_POST['correo']) || empty($_POST['telefono']) || empty($_POST['direccion']) || empty($_POST['genero']) || empty($_POST['fecha_nacimiento']) || empty($_POST['contraseña'])) {
         ?>
         <script>
         alert("Todos los campos obligatorios deben estar llenos");
@@ -11,15 +11,12 @@ if (!empty($_POST)) {
         <?php
     } else {
         $nombre = $_POST['nombre'];
-        $apellido = $_POST['apellido'];
         $correo = $_POST['correo'];
         $telefono = $_POST['telefono'];
         $direccion = $_POST['direccion'];
         $genero = $_POST['genero'];
         $fecha_nacimiento = $_POST['fecha_nacimiento'];
         $contraseña = $_POST['contraseña'];
-        $id_programa = $_POST['id_programa'];
-        $id_coordinador = $_POST['id_coordinador'];
 
         // Verificar coincidencia de contraseñas
         if ($_POST['contraseña'] != $_POST['confcontraseña']) {
@@ -72,8 +69,8 @@ if (!empty($_POST)) {
 
                 // Inserción en la base de datos
                 if (!isset($error)) {
-                    $query_insert_asistente = mysqli_query(conexion(), "INSERT INTO asistentes (nombre, apellido, correo, telefono, direccion, genero, fecha_nacimiento, contraseña, fotografia, id_programa, id_coordinador)
-                        VALUES ('$nombre', '$apellido', '$correo', '$telefono', '$direccion', '$genero', '$fecha_nacimiento', '$contraseña', '$fotografia', '$id_programa', '$id_coordinador')");
+                    $query_insert_asistente = mysqli_query(conexion(), "INSERT INTO asistentes (nombre, correo, telefono, direccion, genero, fecha_nacimiento, contraseña, fotografia)
+                        VALUES ('$nombre', '$correo', '$telefono', '$direccion', '$genero', '$fecha_nacimiento', '$contraseña', '$fotografia')");
 
                     if ($query_insert_asistente) {
                         ?>
@@ -100,11 +97,7 @@ if (!empty($_POST)) {
     }
 }
 
-// Cargar programas para el dropdown
-$programas_query = mysqli_query(conexion(), "SELECT id_programa, nombre_programa FROM programas");
-
-// Cargar coordinadores para el dropdown
-$coordinadores_query = mysqli_query(conexion(), "SELECT id_coordinador, CONCAT(nombre, ' ', apellido) AS nombre_completo FROM coordinadores");
+// Eliminar carga de programas y coordinadores ya que no son necesarios
 
 ?>
 
@@ -185,17 +178,13 @@ $coordinadores_query = mysqli_query(conexion(), "SELECT id_coordinador, CONCAT(n
                             <div class="row mb-3">
                             <div class="col">
                                 <label for="nombre" class="form-label">Nombre</label>
-                                <input type="text" class="form-control" id="nombre" name="nombre">
-                            </div>
-                            <div class="col">
-                                <label for="apellido" class="form-label">Apellido</label>
-                                <input type="text" class="form-control" id="apellido" name="apellido">
+                                <input type="text" class="form-control" id="nombre" name="nombre" required>
                             </div>
                             </div>
                             <div class="row mb-3">
                             <div class="col">
                                 <label for="correo" class="form-label">Correo</label>
-                                <input type="email" class="form-control" id="correo" name="correo">
+                                <input type="email" class="form-control" id="correo" name="correo" required>
                             </div>
                             <div class="col">
                                 <label for="telefono" class="form-label">Teléfono</label>
@@ -209,12 +198,12 @@ $coordinadores_query = mysqli_query(conexion(), "SELECT id_coordinador, CONCAT(n
                             </div>
                             <div class="col">
                                 <label for="genero" class="form-label">Género</label>
-                                <select id="genero" name="genero" class="form-select">
-                                <option selected>Selecciona...</option>
-                                <option value="Masculino">Masculino</option>
-                                <option value="Femenino">Femenino</option>
-                                <option value="Otro">Otro</option>
-                                </select>
+                                    <select class="form-select" id="genero" name="genero">
+                                        <option value="" selected>Seleccionar género</option>
+                                        <option value="Masculino">Masculino</option>
+                                        <option value="Femenino">Femenino</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
                             </div>
                             </div>
                             <div class="row mb-3">
@@ -224,42 +213,25 @@ $coordinadores_query = mysqli_query(conexion(), "SELECT id_coordinador, CONCAT(n
                             </div>
                             <div class="col">
                                 <label for="contraseña" class="form-label">Contraseña</label>
-                                <input type="password" class="form-control" id="contraseña" name="contraseña">
+                                <input type="password" class="form-control" id="contraseña" name="contraseña" required>
                             </div>
                             </div>
                             <div class="row mb-3">
                             <div class="col">
                                 <label for="confcontraseña" class="form-label">Confirmar Contraseña</label>
-                                <input type="password" class="form-control" id="confcontraseña" name="confcontraseña">
+                                <input type="password" class="form-control" id="confcontraseña" name="confcontraseña" required>
                             </div>
                             <div class="col">
                                 <label for="fotografia" class="form-label">Fotografía</label>
                                 <input type="file" class="form-control" id="fotografia" name="fotografia">
                             </div>
+                            </div>                   
+                            <br>
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button class="btn btn-primary" type="submit">Registrar</button>
+                                <button class="btn btn-secondary" type="button" onclick="window.location.href='../Admin/UsuariosAdmin.html'">Cancelar</button>
                             </div>
-                            <div class="row mb-3">
-                            <div class="col">
-                                <label for="id_programa" class="form-label">Programa</label>
-                                <select id="id_programa" name="id_programa" class="form-select">
-                                <?php while ($row = mysqli_fetch_assoc($programas_query)): ?>
-                                    <option value="<?php echo $row['id_programa']; ?>"><?php echo $row['nombre_programa']; ?></option>
-                                <?php endwhile; ?>
-                                </select>
-                            </div>
-                            </div>
-                            <div class="col">
-                                <label for="id_coordinador" class="form-label">Coordinador</label>
-                                <select id="id_coordinador" name="id_coordinador" class="form-select">
-                                    <?php while ($row = mysqli_fetch_assoc($coordinadores_query)): ?>
-                                        <option value="<?php echo $row['id_coordinador']; ?>"><?php echo $row['nombre_completo']; ?></option>
-                                    <?php endwhile; ?>
-                                </select>
-                            </div>                             
-                            <div class="row mb-3">
-                            <div class="col">
-                                <button type="submit" class="btn btn-primary">Registrar</button>
-                            </div>
-                            </div>
+                            <br><br>                          
                         </div>
                     </div>
                     </form>
@@ -268,5 +240,6 @@ $coordinadores_query = mysqli_query(conexion(), "SELECT id_coordinador, CONCAT(n
         </div>
         </div>
     </div>
+
     </body>
 </html>

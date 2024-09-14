@@ -14,25 +14,21 @@ if (isset($_GET['id_coordinador'])) {
         exit;
     }
 
-    // Cargar programas y asistentes para el dropdown
-    $programas_query = mysqli_query(conexion(), "SELECT id_programa, nombre_programa FROM programas");
-    $asistentes_query = mysqli_query(conexion(), "SELECT id_asistente, CONCAT(nombre, ' ', apellido) AS nombre_completo FROM asistentes");
-
+    // Manejo del archivo PDF para el acuerdo de nombramiento
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $nombre = $_POST['nombre'];
-        $apellido = $_POST['apellido'];
+        $identificacion = $_POST['identificacion'];
         $correo = $_POST['correo'];
         $telefono = $_POST['telefono'];
         $direccion = $_POST['direccion'];
         $genero = $_POST['genero'];
         $fecha_nacimiento = $_POST['fecha_nacimiento'];
         $fecha_vinculacion = $_POST['fecha_vinculacion'];
-        $id_programa = $_POST['id_programa'];
         $contraseña = $_POST['contraseña'];
-        $id_asistente = $_POST['id_asistente'];
+        $confcontraseña = $_POST['confcontraseña'];
 
         // Verificar coincidencia de contraseñas
-        if ($contraseña !== $_POST['confcontraseña']) {
+        if ($contraseña !== $confcontraseña) {
             echo "<script>alert('La contraseña no coincide');</script>";
         } else {
             // Manejo del archivo PDF para el acuerdo de nombramiento
@@ -55,7 +51,7 @@ if (isset($_GET['id_coordinador'])) {
             }
 
             // Actualización en la base de datos
-            $query_update_coordinador = mysqli_query(conexion(), "UPDATE coordinadores SET nombre = '$nombre', apellido = '$apellido', correo = '$correo', telefono = '$telefono', direccion = '$direccion', genero = '$genero', fecha_nacimiento = '$fecha_nacimiento', fecha_vinculacion = '$fecha_vinculacion', acuerdo_nombramiento = '$acuerdo_nombramiento', contraseña = '$contraseña', id_programa = '$id_programa', id_asistente = '$id_asistente' WHERE id_coordinador = $id_coordinador");
+            $query_update_coordinador = mysqli_query(conexion(), "UPDATE coordinadores SET nombre = '$nombre', identificacion = '$identificacion', correo = '$correo', telefono = '$telefono', direccion = '$direccion', genero = '$genero', fecha_nacimiento = '$fecha_nacimiento', fecha_vinculacion = '$fecha_vinculacion', acuerdo_nombramiento = '$acuerdo_nombramiento', contraseña = '$contraseña' WHERE id_coordinador = $id_coordinador");
 
             if ($query_update_coordinador) {
                 echo "<script>alert('Coordinador actualizado correctamente'); window.location.href='listarCoordinador.php';</script>";
@@ -78,13 +74,9 @@ if (isset($_GET['id_coordinador'])) {
     <title>Editar Coordinador</title>
     <link rel="icon" type="image/x-icon" href="../img/icon.png">
     <link rel="stylesheet" href="../css/style.css">
-    <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.5/dist/umd/popper.min.js" integrity="sha384-Xe+8cL9oJa6tN/veChSP7q+mnSPaj5Bcu9mPX5F5xIGE0DVittaqT5lorf0EI7Vk" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.min.js" integrity="sha384-ODmDIVzN+pFdexxHEHFBQH3/9/vQ9uori45z4JjnFsRydbmQbmL5t1tQ0culUzyK" crossorigin="anonymous"></script>
-    <script src='main.js'></script>
-    <script src='validacion.js'></script>
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.5/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.min.js"></script>
     <style>
         body {
             background-image: url(../img/font.png);
@@ -141,22 +133,14 @@ if (isset($_GET['id_coordinador'])) {
                 <div class="col py-5">
                     <div class="mx-5 bg-light" style="border-radius: 2%;">
                         <form action="" method="post" enctype="multipart/form-data">
-
-                            <div class="row mb-3">
-                                <div class="col mx-5 px-5">
-                                    <label for="id_coordinador" class="form-label">ID Coordinador</label>
-                                    <input type="text" class="form-control" id="id_coordinador" name="id_coordinador" value="<?php echo $coordinador['id_coordinador']; ?>" readonly>
-                                </div>
-                            </div>
-
                             <div class="row mb-3">
                                 <div class="col mx-5 px-5">
                                     <label for="nombre" class="form-label">Nombre</label>
                                     <input type="text" class="form-control" id="nombre" name="nombre" value="<?php echo $coordinador['nombre']; ?>">
                                 </div>
                                 <div class="col mx-5 px-5">
-                                    <label for="apellido" class="form-label">Apellido</label>
-                                    <input type="text" class="form-control" id="apellido" name="apellido" value="<?php echo $coordinador['apellido']; ?>">
+                                    <label for="identificacion" class="form-label">Identificación</label>
+                                    <input type="text" class="form-control" id="identificacion" name="identificacion" value="<?php echo $coordinador['identificacion']; ?>">
                                 </div>
                             </div>
 
@@ -199,48 +183,36 @@ if (isset($_GET['id_coordinador'])) {
 
                             <div class="row mb-3">
                                 <div class="col mx-5 px-5">
-                                    <label for="id_programa" class="form-label">Programa</label>
-                                    <select id="id_programa" name="id_programa" class="form-select">
-                                        <option value="" selected>Seleccionar</option>
-                                        <?php while ($programa = mysqli_fetch_assoc($programas_query)): ?>
-                                            <option value="<?php echo $programa['id_programa']; ?>" <?php echo ($coordinador['id_programa'] == $programa['id_programa']) ? 'selected' : ''; ?>><?php echo $programa['nombre_programa']; ?></option>
-                                        <?php endwhile; ?>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <div class="col mx-5 px-5">
                                     <label for="acuerdo_nombramiento" class="form-label">Acuerdo de Nombramiento (PDF)</label>
                                     <input type="file" class="form-control" id="acuerdo_nombramiento" name="acuerdo_nombramiento">
                                     <?php if ($coordinador['acuerdo_nombramiento']): ?>
-                                        <a href="../Coordinador/uploads<?php echo $coordinador['acuerdo_nombramiento']; ?>" target="_blank">Ver archivo actual</a>
+                                        <a href="../Coordinador/uploads/<?php echo $coordinador['acuerdo_nombramiento']; ?>" target="_blank">Ver archivo actual</a>
                                     <?php endif; ?>
                                 </div>
                             </div>
 
                             <div class="row mb-3">
                                 <div class="col mx-5 px-5">
-                                    <label for="id_asistente" class="form-label">Asistente</label>
-                                    <select id="id_asistente" name="id_asistente" class="form-select">
-                                        <?php while ($row = mysqli_fetch_assoc($asistentes_query)): ?>
-                                            <option value="<?php echo $row['id_asistente']; ?>" <?php echo ($coordinador['id_asistente'] == $row['id_asistente']) ? 'selected' : ''; ?>><?php echo $row['nombre_completo']; ?></option>
-                                        <?php endwhile; ?>
-                                    </select>
+                                    <label for="contraseña" class="form-label">Contraseña</label>
+                                    <input type="password" class="form-control" id="contraseña" name="contraseña">
+                                </div>
+                                <div class="col mx-5 px-5">
+                                    <label for="confcontraseña" class="form-label">Confirmar Contraseña</label>
+                                    <input type="password" class="form-control" id="confcontraseña" name="confcontraseña">
                                 </div>
                             </div>
 
-                            <div class="row mb-3">
-                                <div class="col text-center">
-                                    <button type="submit" class="btn btn-primary">Actualizar Coordinador</button>
+                            <br>
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button class="btn btn-primary" type="submit">Actualizar</button>
+                                    <a href="listarCoordinador.php" class="btn btn-secondary">Cancelar</a>
                                 </div>
-                            </div>
+                                <br><br>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 </body>
 </html>

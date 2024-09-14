@@ -77,7 +77,7 @@ include "../complementos/conexion.php";
                             <tr>
                                 <th scope="col">#</th>
                                 <th scope="col">Nombre</th>
-                                <th scope="col">Apellido</th>
+                                <th scope="col">Identificación</th>
                                 <th scope="col">Correo</th>
                                 <th scope="col">Teléfono</th>
                                 <th scope="col">Dirección</th>
@@ -85,8 +85,6 @@ include "../complementos/conexion.php";
                                 <th scope="col">Fecha de Nacimiento</th>
                                 <th scope="col">Fecha de Vinculación</th>
                                 <th scope="col">Acuerdo de Nombramiento</th>
-                                <th scope="col" class="programa-column">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Programa&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
-                                <th scope="col" class="asistente-column">Asistente</th>
                                 <th scope="col">Acciones</th>
                             </tr>
                         </thead>
@@ -95,10 +93,7 @@ include "../complementos/conexion.php";
                             $con = conexion();
 
                             // Consulta para obtener los datos de la tabla 'coordinadores'
-                            $sql = "SELECT coordinadores.*, programas.nombre_programa, CONCAT(asistentes.nombre, ' ', asistentes.apellido) AS nombre_asistente
-                                    FROM coordinadores
-                                    LEFT JOIN programas ON coordinadores.id_programa = programas.id_programa
-                                    LEFT JOIN asistentes ON coordinadores.id_asistente = asistentes.id_asistente";
+                            $sql = "SELECT * FROM coordinadores";
                             $query = mysqli_query($con, $sql);
                             $i = 0;
 
@@ -108,25 +103,23 @@ include "../complementos/conexion.php";
                             ?>
                             <tr>
                                 <td><?php echo $i; ?></td>
-                                <td><?php echo $row['nombre']; ?></td>
-                                <td><?php echo $row['apellido']; ?></td>
-                                <td><?php echo $row['correo']; ?></td>
-                                <td><?php echo $row['telefono']; ?></td>
-                                <td><?php echo $row['direccion']; ?></td>
-                                <td><?php echo $row['genero']; ?></td>
-                                <td><?php echo $row['fecha_nacimiento']; ?></td>
-                                <td><?php echo $row['fecha_vinculacion']; ?></td>
+                                <td><?php echo htmlspecialchars($row['nombre']); ?></td>
+                                <td><?php echo htmlspecialchars($row['identificacion']); ?></td>
+                                <td><?php echo htmlspecialchars($row['correo']); ?></td>
+                                <td><?php echo htmlspecialchars($row['telefono']); ?></td>
+                                <td><?php echo htmlspecialchars($row['direccion']); ?></td>
+                                <td><?php echo htmlspecialchars($row['genero']); ?></td>
+                                <td><?php echo htmlspecialchars($row['fecha_nacimiento']); ?></td>
+                                <td><?php echo htmlspecialchars($row['fecha_vinculacion']); ?></td>
                                 <td>
                                     <?php if (!empty($row['acuerdo_nombramiento'])): ?>
-                                        <a href="<?php echo $pdf_url; ?>" class="btn btn-download btn-primary btn-sm" download>
+                                        <a href="<?php echo htmlspecialchars($pdf_url); ?>" class="btn btn-download btn-primary btn-sm" download>
                                             <i class="bi bi-download"></i><span> Descargar PDF</span>
                                         </a>
                                     <?php else: ?>
                                         No disponible
                                     <?php endif; ?>
                                 </td>
-                                <td><?php echo $row['nombre_programa']; ?></td>
-                                <td><?php echo $row['nombre_asistente']; ?></td>
                                 <td>
                                     <div class="btn-group">
                                         <a href="editarCoordinador.php?id_coordinador=<?php echo $row['id_coordinador']; ?>" class="btn btn-success btn-sm">Editar</a>

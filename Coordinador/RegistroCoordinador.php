@@ -2,93 +2,75 @@
 include "../complementos/conexion.php";
 
 if (!empty($_POST)) {
-    if (empty($_POST['id_coordinador']) || empty($_POST['nombre']) || empty($_POST['apellido']) || empty($_POST['correo']) || empty($_POST['telefono']) || empty($_POST['direccion']) || empty($_POST['genero']) || empty($_POST['fecha_nacimiento']) || empty($_POST['id_programa']) || empty($_FILES['acuerdo_nombramiento']['name']) || empty($_POST['contraseña']) || empty($_POST['id_asistente'])) {
+    if (empty($_POST['nombre']) || empty($_POST['identificacion']) || empty($_POST['correo']) || empty($_POST['telefono']) || empty($_POST['direccion']) || empty($_POST['genero']) || empty($_POST['fecha_nacimiento']) || empty($_POST['contraseña']) || empty($_FILES['acuerdo_nombramiento']['name'])) {
         ?>
         <script>
         alert("Todos los campos obligatorios deben estar llenos");
         </script>
         <?php
     } else {
-        $id_coordinador = $_POST['id_coordinador'];
         $nombre = $_POST['nombre'];
-        $apellido = $_POST['apellido'];
+        $identificacion = $_POST['identificacion'];
         $correo = $_POST['correo'];
         $telefono = $_POST['telefono'];
         $direccion = $_POST['direccion'];
-        $genero = $_POST['genero'];
+        $genero = $_POST['genero']; // Se obtiene el valor del select
         $fecha_nacimiento = $_POST['fecha_nacimiento'];
         $fecha_vinculacion = $_POST['fecha_vinculacion'];
-        $id_programa = $_POST['id_programa'];
         $contraseña = $_POST['contraseña'];
-        $id_asistente = $_POST['id_asistente'];
-
-        // Verificar coincidencia de contraseñas
-        if ($_POST['contraseña'] != $_POST['confcontraseña']) {
+        
+        // Verificar si el correo ya existe
+        $con = conexion();
+        $query = mysqli_query($con, "SELECT correo FROM coordinadores WHERE correo = '$correo'");
+        $result = mysqli_fetch_array($query);
+        if ($result) {
             ?>
             <script>
-            alert("La contraseña no coincide");
+            alert("El correo ya existe");
             </script>
             <?php
         } else {
-            // Verificar si el correo ya existe
-            $con = conexion();
-            $query = mysqli_query($con, "SELECT correo FROM coordinadores WHERE correo = '$correo'");
-            $result = mysqli_fetch_array($query);
-            if ($result) {
-                ?>
-                <script>
-                alert("El correo ya existe");
-                </script>
-                <?php
-            } else {
-                // Manejo del archivo PDF para el acuerdo de nombramiento
-                $acuerdo_nombramiento = NULL;
-                if (isset($_FILES['acuerdo_nombramiento']) && $_FILES['acuerdo_nombramiento']['error'] == UPLOAD_ERR_OK) {
-                    $upload_dir = '../Coordinador/uploads/';
-                    if (!is_dir($upload_dir)) {
-                        mkdir($upload_dir, 0777, true);
-                    }
-                    $upload_file = $upload_dir . basename($_FILES['acuerdo_nombramiento']['name']);
-                    if (move_uploaded_file($_FILES['acuerdo_nombramiento']['tmp_name'], $upload_file)) {
-                        $acuerdo_nombramiento = basename($_FILES['acuerdo_nombramiento']['name']);
-                    } else {
-                        ?>
-                        <script>
-                        alert("Error al cargar el acuerdo de nombramiento");
-                        </script>
-                        <?php
-                    }
+            // Manejo del archivo PDF para el acuerdo de nombramiento
+            $acuerdo_nombramiento = NULL;
+            if (isset($_FILES['acuerdo_nombramiento']) && $_FILES['acuerdo_nombramiento']['error'] == UPLOAD_ERR_OK) {
+                $upload_dir = '../Coordinador/uploads/';
+                if (!is_dir($upload_dir)) {
+                    mkdir($upload_dir, 0777, true);
                 }
-
-                // Inserción en la base de datos
-                $query_insert_coordinador = mysqli_query($con, "INSERT INTO coordinadores (id_coordinador, nombre, apellido, correo, telefono, direccion, genero, fecha_nacimiento, fecha_vinculacion, acuerdo_nombramiento, contraseña, id_programa, id_asistente) 
-                    VALUES ('$id_coordinador', '$nombre', '$apellido', '$correo', '$telefono', '$direccion', '$genero', '$fecha_nacimiento', '$fecha_vinculacion', '$acuerdo_nombramiento', '$contraseña', '$id_programa', '$id_asistente')");
-
-                if ($query_insert_coordinador) {
-                    ?>
-                    <script>
-                    alert("Coordinador creado correctamente");
-                    </script>
-                    <?php
+                $upload_file = $upload_dir . basename($_FILES['acuerdo_nombramiento']['name']);
+                if (move_uploaded_file($_FILES['acuerdo_nombramiento']['tmp_name'], $upload_file)) {
+                    $acuerdo_nombramiento = basename($_FILES['acuerdo_nombramiento']['name']);
                 } else {
                     ?>
                     <script>
-                    alert("Error al crear el coordinador");
+                    alert("Error al cargar el acuerdo de nombramiento");
                     </script>
                     <?php
                 }
             }
+
+            // Inserción en la base de datos
+            $query_insert_coordinador = mysqli_query($con, "INSERT INTO coordinadores (nombre, identificacion, direccion, telefono, correo, genero, fecha_nacimiento, fecha_vinculacion, acuerdo_nombramiento, contraseña) 
+                VALUES ('$nombre', '$identificacion', '$direccion', '$telefono', '$correo', '$genero', '$fecha_nacimiento', '$fecha_vinculacion', '$acuerdo_nombramiento', '$contraseña')");
+
+            if ($query_insert_coordinador) {
+                ?>
+                <script>
+                alert("Coordinador creado correctamente");
+                </script>
+                <?php
+            } else {
+                ?>
+                <script>
+                alert("Error al crear el coordinador");
+                </script>
+                <?php
+            }
         }
     }
 }
-
-// Cargar programas para el dropdown
-$programas_query = mysqli_query(conexion(), "SELECT id_programa, nombre_programa FROM programas");
-
-// Cargar coordinadores para el dropdown
-$asistentes_query = mysqli_query(conexion(), "SELECT id_asistente, CONCAT(nombre, ' ', apellido) AS nombre_completo FROM asistentes");
-
 ?>
+
 
 <!DOCTYPE html>
 <html lang="es">
@@ -162,25 +144,18 @@ $asistentes_query = mysqli_query(conexion(), "SELECT id_asistente, CONCAT(nombre
                         <form action="" method="post" enctype="multipart/form-data">
                             <div class="row mb-3">
                                 <div class="col mx-5 px-5">
-                                    <label for="id_coordinador" class="form-label">ID Coordinador</label>
-                                    <input type="text" class="form-control" id="id_coordinador" name="id_coordinador">
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <div class="col mx-5 px-5">
                                     <label for="nombre" class="form-label">Nombre</label>
                                     <input type="text" class="form-control" id="nombre" name="nombre">
                                 </div>
                                 <div class="col mx-5 px-5">
-                                    <label for="apellido" class="form-label">Apellido</label>
-                                    <input type="text" class="form-control" id="apellido" name="apellido">
+                                    <label for="identificacion" class="form-label">Identificación</label>
+                                    <input type="text" class="form-control" id="identificacion" name="identificacion">
                                 </div>
                             </div>
 
                             <div class="row mb-3">
                                 <div class="col mx-5 px-5">
-                                    <label for="correo" class="form-label">Correo Electrónico</label>
+                                    <label for="correo" class="form-label">Correo</label>
                                     <input type="email" class="form-control" id="correo" name="correo">
                                 </div>
                                 <div class="col mx-5 px-5">
@@ -196,8 +171,8 @@ $asistentes_query = mysqli_query(conexion(), "SELECT id_asistente, CONCAT(nombre
                                 </div>
                                 <div class="col mx-5 px-5">
                                     <label for="genero" class="form-label">Género</label>
-                                    <select id="genero" name="genero" class="form-select">
-                                        <option value="" selected>Seleccionar</option>
+                                    <select class="form-select" id="genero" name="genero">
+                                        <option value="" selected>Seleccionar género</option>
                                         <option value="Masculino">Masculino</option>
                                         <option value="Femenino">Femenino</option>
                                         <option value="Otro">Otro</option>
@@ -218,56 +193,31 @@ $asistentes_query = mysqli_query(conexion(), "SELECT id_asistente, CONCAT(nombre
 
                             <div class="row mb-3">
                                 <div class="col mx-5 px-5">
-                                    <label for="id_programa" class="form-label">Programa</label>
-                                    <select id="id_programa" name="id_programa" class="form-select">
-                                        <option value="" selected>Seleccionar</option>
-                                        <?php while ($programa = mysqli_fetch_assoc($programas_query)): ?>
-                                            <option value="<?php echo $programa['id_programa']; ?>"><?php echo $programa['nombre_programa']; ?></option>
-                                        <?php endwhile; ?>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <div class="col mx-5 px-5">
                                     <label for="acuerdo_nombramiento" class="form-label">Acuerdo de Nombramiento (PDF)</label>
-                                    <input type="file" class="form-control" id="acuerdo_nombramiento" name="acuerdo_nombramiento">
+                                    <input type="file" class="form-control" id="acuerdo_nombramiento" name="acuerdo_nombramiento" accept="application/pdf">
                                 </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <div class="col mx-5 px-5">
-                                    <label for="id_asistente" class="form-label">Asistente</label>
-                                    <select id="id_asistente" name="id_asistente" class="form-select">
-                                        <?php while ($row = mysqli_fetch_assoc($asistentes_query)): ?>
-                                            <option value="<?php echo $row['id_asistente']; ?>"><?php echo $row['nombre_completo']; ?></option>
-                                        <?php endwhile; ?>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
+                
                                 <div class="col mx-5 px-5">
                                     <label for="contraseña" class="form-label">Contraseña</label>
                                     <input type="password" class="form-control" id="contraseña" name="contraseña">
                                 </div>
-                                <div class="col mx-5 px-5">
-                                    <label for="confcontraseña" class="form-label">Confirmar Contraseña</label>
-                                    <input type="password" class="form-control" id="confcontraseña" name="confcontraseña">
-                                </div>
                             </div>
 
                             <div class="row mb-3">
-                                <div class="col text-center">
-                                    <button type="submit" class="btn btn-primary">Registrar Coordinador</button>
-                                </div>
+                            <br>
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button class="btn btn-primary" type="submit">Registrar</button>
+                                <button class="btn btn-secondary" type="button" onclick="window.location.href='../Admin/UsuariosAdmin.html'">Cancelar</button>
                             </div>
+                            <br>
+            
+                            </div>
+
                         </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 </body>
 </html>
