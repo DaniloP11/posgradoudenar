@@ -11,33 +11,35 @@ if (!isset($_SESSION["email"]) || !isset($_SESSION["rol"])) {
 $programas = [];
 $cohortes = [];
 
-// Obtener la lista de programas
+// Obtener el id_programa del usuario
+$id_programa_usuario = $_SESSION["id_programa"];
+
+// Conexión a la base de datos
 $conexion = conexion();
 if (!$conexion) {
     die("Error de conexión a la base de datos");
 }
 
-$stmt = mysqli_prepare($conexion, "SELECT id_programa, descripcion FROM programas");
-mysqli_stmt_execute($stmt);
-mysqli_stmt_bind_result($stmt, $programa_id, $descripcion);
-
-while (mysqli_stmt_fetch($stmt)) {
-    $programas[] = ['id_programa' => $programa_id, 'descripcion' => $descripcion];
+// Consultas según rol
+if ($_SESSION["rol"] == '1') { // Administrador
+    $programas_query = mysqli_query($conexion, "SELECT id_programa, descripcion FROM programas");
+    $cohortes_query = mysqli_query($conexion, "SELECT id_cohorte, nombre FROM cohortes");
+} else { // Asistentes y Coordinadores
+    $programas_query = mysqli_query($conexion, "SELECT id_programa, descripcion FROM programas WHERE id_programa = $id_programa_usuario");
+    $cohortes_query = mysqli_query($conexion, "SELECT id_cohorte, nombre FROM cohortes WHERE id_programa = $id_programa_usuario");
 }
 
-mysqli_stmt_close($stmt);
-
-// Obtener la lista de cohortes
-$stmt = mysqli_prepare($conexion, "SELECT id_cohorte, nombre FROM cohortes");
-mysqli_stmt_execute($stmt);
-mysqli_stmt_bind_result($stmt, $cohorte_id, $nombre);
-
-while (mysqli_stmt_fetch($stmt)) {
-    $cohortes[] = ['id_cohorte' => $cohorte_id, 'nombre' => $nombre];
+// Cargar programas
+while ($row = mysqli_fetch_assoc($programas_query)) {
+    $programas[] = $row;
 }
 
-mysqli_stmt_close($stmt);
+// Cargar cohortes
+while ($row = mysqli_fetch_assoc($cohortes_query)) {
+    $cohortes[] = $row;
+}
 
+// Manejo del formulario
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Verificar que todos los campos obligatorios están llenos
     $requiredFields = ['nombre', 'identificacion', 'direccion', 'telefono', 'correo', 'formacion_pregrado', 'formacion_posgrado', 'areas_conocimiento', 'id_programa', 'id_cohorte'];
@@ -61,27 +63,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $foto = null;
         if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
             $uploadDir = 'uploads/';
-            
-            // Verificar si la carpeta 'uploads' existe, si no, crearla
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
             }
-        
-            // Nombre único para la imagen para evitar sobreescrituras
             $fotoNombre = basename($_FILES['foto']['name']);
             $fotoRuta = $uploadDir . $fotoNombre;
-        
+
             if (move_uploaded_file($_FILES['foto']['tmp_name'], $fotoRuta)) {
                 $foto = $fotoRuta;
             } else {
                 echo "<script>alert('Error al subir la imagen');</script>";
             }
-        }
-        
-        // Conexión a la base de datos
-        if (!$conexion) {
-            echo "<script>alert('Error de conexión a la base de datos');</script>";
-            exit();
         }
 
         // Verificar si el correo ya existe
@@ -104,12 +96,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
 
-        // Cerrar la declaración y la conexión
         mysqli_stmt_close($stmt);
         mysqli_close($conexion);
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html>
@@ -161,6 +153,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link text-white" href="../Admin/UsuariosAdmin.html">Usuarios</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="../Admin/perfiladmin.php">Mi perfil</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link text-white" href="../Admin/misdatos.php">Mis datos</a>

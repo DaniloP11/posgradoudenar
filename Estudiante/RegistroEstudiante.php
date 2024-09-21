@@ -8,6 +8,7 @@ if (!isset($_SESSION["email"]) || !isset($_SESSION["rol"])) {
     exit();
 }
 
+// Manejo del formulario
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Verificar que todos los campos obligatorios están llenos
     $requiredFields = [
@@ -117,10 +118,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 // Cargar cohortes y programas para el dropdown
 $conexion = conexion();
-$cohortes_query = mysqli_query($conexion, "SELECT id_cohorte, nombre FROM cohortes"); // Modificado
-$programas_query = mysqli_query($conexion, "SELECT id_programa, descripcion FROM programas");
+if (!$conexion) {
+    die("Error de conexión a la base de datos");
+}
+
+// Obtener id_programa del usuario
+$id_programa_usuario = $_SESSION["id_programa"];
+
+// Consultas según rol
+if ($_SESSION["rol"] == '1') { // Administrador
+    $cohortes_query = mysqli_query($conexion, "SELECT id_cohorte, nombre FROM cohortes");
+    $programas_query = mysqli_query($conexion, "SELECT id_programa, descripcion FROM programas");
+} else { // Asistentes y Coordinadores
+    $cohortes_query = mysqli_query($conexion, "SELECT id_cohorte, nombre FROM cohortes WHERE id_programa = $id_programa_usuario");
+    $programas_query = mysqli_query($conexion, "SELECT id_programa, descripcion FROM programas WHERE id_programa = $id_programa_usuario");
+}
+
 mysqli_close($conexion);
 ?>
+
 
 
 <!DOCTYPE html>
@@ -175,6 +191,9 @@ mysqli_close($conexion);
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link text-white" href="../Admin/UsuariosAdmin.html">Usuarios</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="../Admin/perfiladmin.php">Mi perfil</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link text-white" href="../Admin/misdatos.php">Mis datos</a>

@@ -1,5 +1,4 @@
 <?php
-
 include "complementos/conexion.php";
 
 session_start();
@@ -27,7 +26,13 @@ if ($tableData) {
         die("Error de conexión a la base de datos.");
     }
 
-    $consulta = "SELECT * FROM $table WHERE $emailColumn = ? AND $passwordColumn = ?";
+    // Consulta SQL
+    if ($ROL == "1") {
+        $consulta = "SELECT * FROM $table WHERE $emailColumn = ? AND $passwordColumn = ?";
+    } else {
+        $consulta = "SELECT *, id_programa FROM $table WHERE $emailColumn = ? AND $passwordColumn = ?";
+    }
+
     $stmt = mysqli_prepare($conexion, $consulta);
     if ($stmt === false) {
         die("Error en la preparación de la consulta: " . mysqli_error($conexion));
@@ -39,22 +44,24 @@ if ($tableData) {
     $filas = mysqli_num_rows($resultado);
 
     if ($filas > 0) {
-        // Guardar el rol y redirigir según el rol
+        $usuario = mysqli_fetch_assoc($resultado);
         $_SESSION["email"] = $email;
         $_SESSION["rol"] = $ROL;
+
+        // Solo almacenar id_programa si no es administrador
+        if ($ROL != "1") {
+            $_SESSION["id_programa"] = $usuario['id_programa']; 
+        }
+
         // Redirigir según el rol
         if ($ROL == "1") {
-            $_SESSION["email"] = $email;
             header("Location: ./Admin/InicioAdmi.php");
-        } else if ($ROL == "2") {
-            $_SESSION["email"] = $email;
+        } elseif ($ROL == "2") {
             header("Location: Asistente/InicioAsiste.php");
-        } else if ($ROL == "3") {
-            $_SESSION["email"] = $email;
+        } elseif ($ROL == "3") {
             header("Location: Coordinador/InicioCoord.php");
         }
     } else {
-        // Mostrar el alert y redirigir a index.html
         echo "<script> 
             alert('El rol del usuario no es el correspondiente.');
             window.location.href = 'index.html'; 
@@ -64,7 +71,4 @@ if ($tableData) {
     mysqli_stmt_close($stmt);
     mysqli_close($conexion);
 }
-
 ?>
-
-

@@ -2,116 +2,146 @@
 include "../complementos/conexion.php";
 session_start();
 
-// Inicializar variable de mensaje
-if (!isset($_SESSION['mensaje'])) {
-    $_SESSION['mensaje'] = '';
-}
-
 // Verificar que el usuario está logueado
 if (!isset($_SESSION["email"]) || !isset($_SESSION["rol"])) {
     header("Location: ../index.html");
     exit();
 }
 
-// Conexión a la base de datos
+// Mostrar mensaje de éxito si existe
+if (!empty($_SESSION['mensaje'])) {
+    echo "<script>alert('" . htmlspecialchars($_SESSION['mensaje']) . "');</script>";
+    $_SESSION['mensaje'] = ''; // Limpiar el mensaje después de mostrarlo
+}
+
+// Obtener ID del estudiante a editar
+$id_estudiante = $_GET['id'] ?? null;
+
+if ($id_estudiante === null) {
+    die("ID de estudiante no proporcionado");
+}
+
 $conexion = conexion();
 if (!$conexion) {
     die("Error de conexión a la base de datos");
 }
 
-// Verificar si se ha enviado el ID del estudiante para editar
-if (isset($_GET['id'])) {
-    $id_estudiante = $_GET['id'];
-
-    // Obtener los datos del estudiante desde la base de datos
-    $stmt = mysqli_prepare($conexion, "SELECT * FROM estudiantes WHERE id_estudiante = ?");
+// Consultar datos del estudiante
+$id_programa = $_SESSION['id_programa'];
+$query = ($_SESSION['rol'] == '1') 
+    ? "SELECT * FROM estudiantes WHERE id_estudiante = ?" 
+    : "SELECT * FROM estudiantes WHERE id_estudiante = ? AND id_programa = ?";
+$stmt = mysqli_prepare($conexion, $query);
+if ($_SESSION['rol'] == '1') {
     mysqli_stmt_bind_param($stmt, 'i', $id_estudiante);
-    mysqli_stmt_execute($stmt);
-    $resultado = mysqli_stmt_get_result($stmt);
-    $estudiante = mysqli_fetch_assoc($resultado);
-
-    if (!$estudiante) {
-        die("Estudiante no encontrado");
-    }
 } else {
-    die("ID de estudiante no proporcionado");
+    mysqli_stmt_bind_param($stmt, 'ii', $id_estudiante, $id_programa);
 }
 
-// Procesar la actualización cuando se envía el formulario
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nombre = $_POST['nombre'];
-    $codigo_estudiantil = $_POST['codigo_estudiantil'];
-    $correo = $_POST['correo'];
-    $telefono = $_POST['telefono'];
-    $direccion = $_POST['direccion'];
-    $genero = $_POST['genero'];
-    $fecha_nacimiento = $_POST['fecha_nacimiento'];
-    $semestre = $_POST['semestre'];
-    $estado_civil = $_POST['estado_civil'];
-    $id_cohorte = $_POST['id_cohorte'];
-    $fecha_ingreso = $_POST['fecha_ingreso'];
-    $fecha_egreso = $_POST['fecha_egreso'];
-    $id_programa = $_POST['id_programa'];
+mysqli_stmt_execute($stmt);
+$resultado = mysqli_stmt_get_result($stmt);
+$estudiante = mysqli_fetch_assoc($resultado);
+mysqli_stmt_close($stmt);
 
-    // Manejo de la fotografía: permitir mantener la fotografía actual
-    if (!empty($_FILES['fotografia']['name'])) {
+if (!$estudiante) {
+    die("Estudiante no encontrado o no tienes permiso para ver este registro.");
+}
+
+// Procesar la actualización del estudiante
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $requiredFields = [
+        'nombre', 'codigo_estudiantil', 'correo', 'telefono',
+        'direccion', 'genero', 'fecha_nacimiento', 'semestre',
+        'estado_civil', 'id_cohorte', 'fecha_ingreso', 'fecha_egreso', 'id_programa'
+    ];
+
+    // Validar campos requeridos
+    $allFieldsFilled = array_reduce($requiredFields, function ($carry, $field) {
+        return $carry && !empty($_POST[$field]);
+    }, true);
+
+    // Verificar si se ha subido una nueva fotografía
+    if (empty($_FILES['fotografia']['name'])) {
+        echo "<script>alert('Se debe subir una nueva fotografía');</script>";
+        $allFieldsFilled = false;
+    }
+
+    if (!$allFieldsFilled) {
+        echo "<script>alert('Todos los campos obligatorios deben estar llenos');</script>";
+    } else {
+        // Preparar datos para la actualización
+        $nombre = $_POST['nombre'];
+        $codigo_estudiantil = $_POST['codigo_estudiantil'];
+        $correo = $_POST['correo'];
+        $telefono = $_POST['telefono'];
+        $direccion = $_POST['direccion'];
+        $genero = $_POST['genero'];
+        $fecha_nacimiento = $_POST['fecha_nacimiento'];
+        $semestre = $_POST['semestre'];
+        $estado_civil = $_POST['estado_civil'];
+        $id_cohorte = $_POST['id_cohorte'];
+        $fecha_ingreso = $_POST['fecha_ingreso'];
+        $fecha_egreso = $_POST['fecha_egreso'];
+        $id_programa = $_POST['id_programa'];
+
+        // Manejo de la fotografía
         $fotografia = $_FILES['fotografia']['name'];
         $target_dir = "uploads/";
         $target_file = $target_dir . basename($fotografia);
-        $uploadOk = 1;
+        $uploadOk = true;
 
-        // Verificar si el archivo es una imagen
+        // Validaciones para la imagen
         $check = getimagesize($_FILES['fotografia']['tmp_name']);
         if ($check === false) {
             echo "<script>alert('El archivo no es una imagen.');</script>";
-            $uploadOk = 0;
+            $uploadOk = false;
+        } elseif (file_exists($target_file)) {
+            echo "<script>alert('Lo siento, el archivo ya existe.');</script>";
+            $uploadOk = false;
+        } elseif ($_FILES['fotografia']['size'] > 500000) {
+            echo "<script>alert('Lo siento, el archivo es demasiado grande.');</script>";
+            $uploadOk = false;
+        } elseif (!in_array(strtolower(pathinfo($target_file, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif'])) {
+            echo "<script>alert('Lo siento, solo se permiten archivos JPG, JPEG, PNG y GIF.');</script>";
+            $uploadOk = false;
         }
 
-        // Verificar el tamaño del archivo
-        if ($_FILES['fotografia']['size'] > 500000) {
-            echo "<script>alert('El archivo es demasiado grande.');</script>";
-            $uploadOk = 0;
-        }
+        // Si todo está bien, intenta subir el archivo
+        if ($uploadOk) {
+            if (move_uploaded_file($_FILES['fotografia']['tmp_name'], $target_file)) {
+                // Actualizar estudiante en la base de datos
+                $stmt = mysqli_prepare($conexion, "UPDATE estudiantes SET nombre = ?, codigo_estudiantil = ?, correo = ?, telefono = ?, direccion = ?, genero = ?, fecha_nacimiento = ?, semestre = ?, estado_civil = ?, id_cohorte = ?, fotografia = ?, fecha_ingreso = ?, fecha_egreso = ?, id_programa = ? WHERE id_estudiante = ?");
+                mysqli_stmt_bind_param($stmt, 'sssssssssssssii', $nombre, $codigo_estudiantil, $correo, $telefono, $direccion, $genero, $fecha_nacimiento, $semestre, $estado_civil, $id_cohorte, $fotografia, $fecha_ingreso, $fecha_egreso, $id_programa, $id_estudiante);
 
-        // Permitir ciertos formatos de archivo
-        $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-        if (!in_array($imageFileType, ['jpg', 'png', 'jpeg', 'gif'])) {
-            echo "<script>alert('Solo se permiten archivos JPG, JPEG, PNG y GIF.');</script>";
-            $uploadOk = 0;
-        }
+                if (mysqli_stmt_execute($stmt)) {
+                    $_SESSION['mensaje'] = 'Datos actualizados exitosamente';
+                    header("Location: listarEstudiante.php");
+                    exit();
+                } else {
+                    echo "<script>alert('Error al actualizar el estudiante');</script>";
+                }
 
-        // Intentar subir el archivo
-        if ($uploadOk == 1) {
-            if (!move_uploaded_file($_FILES['fotografia']['tmp_name'], $target_file)) {
-                echo "<script>alert('Hubo un error al subir la imagen.');</script>";
+                mysqli_stmt_close($stmt);
+            } else {
+                echo "<script>alert('Lo siento, hubo un error al subir tu archivo.');</script>";
             }
         }
-    } else {
-        // Si no se sube una nueva fotografía, mantener la anterior
-        $fotografia = $estudiante['fotografia'];
     }
-
-    // Actualizar los datos del estudiante en la base de datos
-    $stmt = mysqli_prepare($conexion, "UPDATE estudiantes SET nombre = ?, codigo_estudiantil = ?, correo = ?, telefono = ?, direccion = ?, genero = ?, fecha_nacimiento = ?, semestre = ?, estado_civil = ?, id_cohorte = ?, fotografia = ?, fecha_ingreso = ?, fecha_egreso = ?, id_programa = ? WHERE id_estudiante = ?");
-    mysqli_stmt_bind_param($stmt, 'sssssssssssssii', $nombre, $codigo_estudiantil, $correo, $telefono, $direccion, $genero, $fecha_nacimiento, $semestre, $estado_civil, $id_cohorte, $fotografia, $fecha_ingreso, $fecha_egreso, $id_programa, $id_estudiante);
-
-    if (mysqli_stmt_execute($stmt)) {
-        $_SESSION['mensaje'] = 'Datos actualizados exitosamente';
-        header("Location: listarEstudiante.php");
-        exit();
-    } else {
-        echo "<script>alert('Error al actualizar el estudiante');</script>";
-    }
-
-    mysqli_stmt_close($stmt);
 }
 
 // Cargar cohortes y programas para los dropdowns
-$cohortes_query = mysqli_query($conexion, "SELECT id_cohorte, nombre FROM cohortes");
-$programas_query = mysqli_query($conexion, "SELECT id_programa, descripcion FROM programas");
+$conexion = conexion();
+if (!$conexion) {
+    die("Error de conexión a la base de datos");
+}
 
+// Consultas según rol
+$cohortes_query = ($_SESSION["rol"] == '1')
+    ? mysqli_query($conexion, "SELECT id_cohorte, nombre FROM cohortes")
+    : mysqli_query($conexion, "SELECT id_cohorte, nombre FROM cohortes WHERE id_programa = $id_programa");
 
-// Cerrar la conexión
+$programas_query = mysqli_query($conexion, "SELECT id_programa, descripcion FROM programas" . 
+    ($_SESSION["rol"] != '1' ? " WHERE id_programa = $id_programa" : ""));
 mysqli_close($conexion);
 ?>
 
@@ -167,6 +197,9 @@ mysqli_close($conexion);
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link text-white" href="../Admin/UsuariosAdmin.html">Usuarios</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="../Admin/perfiladmin.php">Mi perfil</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link text-white" href="../Admin/misdatos.php">Mis datos</a>

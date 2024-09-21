@@ -13,17 +13,28 @@ if (!$conexion) {
     die("Error de conexión a la base de datos");
 }
 
-// Consulta para obtener la lista de estudiantes con la descripción del programa
-$sql = "SELECT e.*, p.descripcion, c.nombre AS cohorte_nombre 
-        FROM estudiantes e
-        JOIN programas p ON e.id_programa = p.id_programa
-        JOIN cohortes c ON e.id_cohorte = c.id_cohorte";
+// Modificar la consulta para ajustar según el rol
+if ($_SESSION['rol'] == '1') { // Administrador
+    $sql = "SELECT e.*, p.descripcion, c.nombre AS cohorte_nombre 
+            FROM estudiantes e
+            JOIN programas p ON e.id_programa = p.id_programa
+            JOIN cohortes c ON e.id_cohorte = c.id_cohorte";
+} else { // Asistente o Coordinador
+    $programaId = $_SESSION['id_programa']; // Asegúrate de que el ID del programa esté en la sesión
+    $sql = "SELECT e.*, p.descripcion, c.nombre AS cohorte_nombre 
+            FROM estudiantes e
+            JOIN programas p ON e.id_programa = p.id_programa
+            JOIN cohortes c ON e.id_cohorte = c.id_cohorte
+            WHERE e.id_programa = '$programaId'";
+}
+
 $query = mysqli_query($conexion, $sql);
 
 if (!$query) {
     die("Error en la consulta: " . mysqli_error($conexion));
 }
 ?>
+
 
 <!DOCTYPE html>
 <html>
@@ -79,6 +90,9 @@ if (!$query) {
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link text-white" href="../Admin/UsuariosAdmin.html">Usuarios</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="../Admin/perfiladmin.php">Mi perfil</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link text-white" href="../Admin/misdatos.php">Mis datos</a>

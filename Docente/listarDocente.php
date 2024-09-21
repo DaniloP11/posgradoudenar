@@ -3,7 +3,7 @@ include "../complementos/conexion.php";
 session_start();
 
 // Verificar que el usuario está logueado
-if (!isset($_SESSION["email"]) || !isset($_SESSION["rol"])) {
+if (!isset($_SESSION["email"]) || !isset($_SESSION["rol"]) || !isset($_SESSION["id_programa"])) {
     header("Location: ../index.html");
     exit();
 }
@@ -13,13 +13,38 @@ if (!$conexion) {
     die("Error de conexión a la base de datos");
 }
 
-// Consulta para obtener la lista de docentes con programas y cohortes
-$sql = "SELECT d.id_docente, d.nombre, d.identificacion, d.direccion, d.telefono, d.correo, d.foto, d.formacion_pregrado, d.formacion_posgrado, d.areas_conocimiento,
-               p.descripcion AS programa, c.nombre AS cohorte
-        FROM docentes d
-        LEFT JOIN programas p ON d.id_programa = p.id_programa
-        LEFT JOIN cohortes c ON d.id_cohorte = c.id_cohorte";
-$query = mysqli_query($conexion, $sql);
+// Suponiendo que el id_programa del usuario está almacenado en la sesión
+$id_programa_usuario = $_SESSION['id_programa'];
+
+// Consulta para obtener la lista de docentes filtrada por programa según el rol
+if ($_SESSION['rol'] == '1') { // Administrador
+    $sql = "SELECT d.id_docente, d.nombre, d.identificacion, d.direccion, d.telefono, d.correo, d.foto, 
+                   d.formacion_pregrado, d.formacion_posgrado, d.areas_conocimiento, 
+                   p.descripcion AS programa, c.nombre AS cohorte
+            FROM docentes d
+            LEFT JOIN programas p ON d.id_programa = p.id_programa
+            LEFT JOIN cohortes c ON d.id_cohorte = c.id_cohorte";
+} else { // Coordinador o Asistente
+    $sql = "SELECT d.id_docente, d.nombre, d.identificacion, d.direccion, d.telefono, d.correo, d.foto, 
+                   d.formacion_pregrado, d.formacion_posgrado, d.areas_conocimiento, 
+                   p.descripcion AS programa, c.nombre AS cohorte
+            FROM docentes d
+            LEFT JOIN programas p ON d.id_programa = p.id_programa
+            LEFT JOIN cohortes c ON d.id_cohorte = c.id_cohorte
+            WHERE d.id_programa = ?";
+}
+
+// Preparar la consulta
+$stmt = mysqli_prepare($conexion, $sql);
+
+if ($_SESSION['rol'] != '1') {
+    // Bindear el parámetro del programa solo si no es administrador
+    mysqli_stmt_bind_param($stmt, 'i', $id_programa_usuario);
+}
+
+// Ejecutar la consulta
+mysqli_stmt_execute($stmt);
+$query = mysqli_stmt_get_result($stmt);
 
 if (!$query) {
     die("Error en la consulta: " . mysqli_error($conexion));
@@ -77,6 +102,7 @@ if (!$query) {
                         <?php if ($_SESSION['rol'] == '1'): ?>
                             <li class="nav-item"><a class="nav-link active text-white" href="../Admin/InicioAdmi.php">Inicio</a></li>
                             <li class="nav-item"><a class="nav-link text-white" href="../Admin/UsuariosAdmin.html">Usuarios</a></li>
+                            <li class="nav-item"><a class="nav-link text-white" href="../Admin/perfiladmin.php">Mi perfil</a></li>
                             <li class="nav-item"><a class="nav-link text-white" href="../Admin/misdatos.php">Mis datos</a></li>
                         <?php elseif ($_SESSION['rol'] == '2'): ?>
                             <li class="nav-item"><a class="nav-link active text-white" href="../Asistente/InicioAsiste.php">Inicio</a></li>

@@ -138,6 +138,9 @@ if (isset($_GET['id_coordinador'])) {
                             <a class="nav-link text-white" href="../Admin/UsuariosAdmin.html">Usuarios</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link text-white" href="../Admin/perfiladmin.php">Mi perfil</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link text-white" href="../Admin/misdatos.php">Mis datos</a>
                         </li>
                         </ul>

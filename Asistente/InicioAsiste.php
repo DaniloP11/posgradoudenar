@@ -84,7 +84,7 @@ if ($mostrar = mysqli_fetch_array($query_asistente)) {
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link text-white" href="UsuariosAsiste.html">Usuarios</a>
-                            </li>
+                            </li>                   
                             <li class="nav-item">
                                 <a class="nav-link text-white" href="misdatos.php">Mis datos</a>
                             </li>

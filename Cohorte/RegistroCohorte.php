@@ -8,6 +8,9 @@ if (!isset($_SESSION["email"]) || !isset($_SESSION["rol"])) {
     exit();
 }
 
+// Obtener el id_programa del usuario si es asistente o coordinador
+$id_programa_usuario = $_SESSION['id_programa'] ?? null;
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Verificar que todos los campos obligatorios están llenos
     $requiredFields = ['nombre', 'fecha_inicio', 'fecha_fin', 'id_programa'];
@@ -21,26 +24,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $fecha_fin = $_POST['fecha_fin'];
         $id_programa = $_POST['id_programa'];
 
-        // Conexión a la base de datos
-        $conexion = conexion();
-        if (!$conexion) {
-            echo "<script>alert('Error de conexión a la base de datos');</script>";
-            exit();
-        }
-
-        // Insertar nuevo cohorte
-        $stmt = mysqli_prepare($conexion, "INSERT INTO cohortes (nombre, fecha_inicio, fecha_fin, id_programa) VALUES (?, ?, ?, ?)");
-        mysqli_stmt_bind_param($stmt, 'sssi', $nombre, $fecha_inicio, $fecha_fin, $id_programa);
-
-        if (mysqli_stmt_execute($stmt)) {
-            echo "<script>alert('Cohorte creado correctamente');</script>";
+        // Asegurarse de que el programa seleccionado es el mismo que el del usuario
+        if ($_SESSION['rol'] != '1' && $id_programa != $id_programa_usuario) {
+            echo "<script>alert('No tienes permiso para registrar cohortes para este programa');</script>";
         } else {
-            echo "<script>alert('Error al crear el cohorte');</script>";
-        }
+            // Conexión a la base de datos
+            $conexion = conexion();
+            if (!$conexion) {
+                echo "<script>alert('Error de conexión a la base de datos');</script>";
+                exit();
+            }
 
-        // Cerrar la declaración y la conexión
-        mysqli_stmt_close($stmt);
-        mysqli_close($conexion);
+            // Insertar nuevo cohorte
+            $stmt = mysqli_prepare($conexion, "INSERT INTO cohortes (nombre, fecha_inicio, fecha_fin, id_programa) VALUES (?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, 'sssi', $nombre, $fecha_inicio, $fecha_fin, $id_programa);
+
+            if (mysqli_stmt_execute($stmt)) {
+                echo "<script>alert('Cohorte creado correctamente');</script>";
+            } else {
+                echo "<script>alert('Error al crear el cohorte');</script>";
+            }
+
+            // Cerrar la declaración y la conexión
+            mysqli_stmt_close($stmt);
+            mysqli_close($conexion);
+        }
     }
 }
 
@@ -50,7 +58,14 @@ if (!$conexion) {
     die("Error de conexión a la base de datos");
 }
 
-$stmt = mysqli_prepare($conexion, "SELECT id_programa, descripcion FROM programas");
+// Obtener solo los programas a los que tiene acceso el usuario
+if ($_SESSION['rol'] == '1') { // Administrador
+    $stmt = mysqli_prepare($conexion, "SELECT id_programa, descripcion FROM programas");
+} else {
+    $stmt = mysqli_prepare($conexion, "SELECT id_programa, descripcion FROM programas WHERE id_programa = ?");
+    mysqli_stmt_bind_param($stmt, 'i', $id_programa_usuario);
+}
+
 mysqli_stmt_execute($stmt);
 mysqli_stmt_bind_result($stmt, $id_programa, $descripcion);
 
@@ -62,6 +77,7 @@ while (mysqli_stmt_fetch($stmt)) {
 mysqli_stmt_close($stmt);
 mysqli_close($conexion);
 ?>
+
 
 <!DOCTYPE html>
 <html>
@@ -120,6 +136,9 @@ mysqli_close($conexion);
                                 <a class="nav-link text-white" href="../Admin/UsuariosAdmin.html">Usuarios</a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link text-white" href="../Admin/perfiladmin.php">Mi perfil</a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link text-white" href="../Admin/misdatos.php">Mis datos</a>
                             </li>
                         <?php elseif ($_SESSION['rol'] == '2'): ?>
@@ -164,7 +183,7 @@ mysqli_close($conexion);
                                 <!-- Campo para el nombre de la cohorte -->
                                 <div class="row mb-3">
                                     <div class="col">
-                                        <label for="nombre" class="form-label">Nombre de la Cohorte</label>
+                                        <label for="nombre" class="form-label">Cohorte</label>
                                         <input type="text" class="form-control" id="nombre" name="nombre" required>
                                     </div>
                                     <div class="col">

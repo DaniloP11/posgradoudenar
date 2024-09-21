@@ -20,7 +20,7 @@ if (!$conexion) {
     die("Error de conexión a la base de datos");
 }
 
-// Obtener los datos del docente, incluyendo id_programa y id_cohorte
+// Obtener los datos del docente
 $sql = "SELECT d.id_docente, d.nombre, d.identificacion, d.direccion, d.telefono, d.correo, d.foto, 
                d.formacion_pregrado, d.formacion_posgrado, d.areas_conocimiento, 
                d.id_programa, d.id_cohorte, 
@@ -40,6 +40,18 @@ if (mysqli_num_rows($result) == 0) {
 }
 
 $docente = mysqli_fetch_assoc($result);
+
+// Verificar el rol y filtrar programas y cohortes
+$id_programa_usuario = $_SESSION["id_programa"];
+if ($_SESSION["rol"] != '1') { // Si no es administrador
+    $programasSql = "SELECT id_programa, descripcion FROM programas WHERE id_programa = $id_programa_usuario";
+    $cohortesSql = "SELECT id_cohorte, nombre FROM cohortes WHERE id_programa = $id_programa_usuario";
+} else {
+    $programasSql = "SELECT id_programa, descripcion FROM programas";
+    $cohortesSql = "SELECT id_cohorte, nombre FROM cohortes";
+}
+$programasResult = mysqli_query($conexion, $programasSql);
+$cohortesResult = mysqli_query($conexion, $cohortesSql);
 
 // Manejo de la actualización de datos
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -74,7 +86,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $updateSql = "UPDATE docentes SET nombre = ?, identificacion = ?, correo = ?, telefono = ?, direccion = ?, foto = ?, formacion_pregrado = ?, formacion_posgrado = ?, areas_conocimiento = ?, id_programa = ?, id_cohorte = ? WHERE id_docente = ?";
     $stmt = mysqli_prepare($conexion, $updateSql);
     if ($stmt) {
-        mysqli_stmt_bind_param($stmt, 'ssssssssssi', $nombre, $identificacion, $correo, $telefono, $direccion, $foto, $formacion_pregrado, $formacion_posgrado, $areas_conocimiento, $id_programa, $id_cohorte, $id_docente);
+        mysqli_stmt_bind_param($stmt, 'ssssssssssii', $nombre, $identificacion, $correo, $telefono, $direccion, $foto, $formacion_pregrado, $formacion_posgrado, $areas_conocimiento, $id_programa, $id_cohorte, $id_docente);
+
         if (mysqli_stmt_execute($stmt)) {
             echo "<script>alert('Docente actualizado correctamente');</script>";
         } else {
@@ -85,13 +98,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo "<script>alert('Error al preparar la consulta');</script>";
     }
 }
-
-// Obtener programas y cohortes para los select
-$programasSql = "SELECT id_programa, descripcion FROM programas";
-$programasResult = mysqli_query($conexion, $programasSql);
-
-$cohortesSql = "SELECT id_cohorte, nombre FROM cohortes";
-$cohortesResult = mysqli_query($conexion, $cohortesSql);
 
 mysqli_close($conexion);
 ?>
@@ -143,6 +149,7 @@ mysqli_close($conexion);
                         <?php if ($_SESSION['rol'] == '1'): ?>
                             <li class="nav-item"><a class="nav-link active text-white" href="../Admin/InicioAdmi.php">Inicio</a></li>
                             <li class="nav-item"><a class="nav-link text-white" href="../Admin/UsuariosAdmin.html">Usuarios</a></li>
+                            <li class="nav-item"><a class="nav-link text-white" href="../Admin/perfiladmin.php">Mi perfil</a></li>
                             <li class="nav-item"><a class="nav-link text-white" href="../Admin/misdatos.php">Mis datos</a></li>
                         <?php elseif ($_SESSION['rol'] == '2'): ?>
                             <li class="nav-item"><a class="nav-link active text-white" href="../Asistente/InicioAsiste.php">Inicio</a></li>
@@ -189,10 +196,7 @@ mysqli_close($conexion);
                                         <label for="telefono" class="form-label">Teléfono</label>
                                         <input type="text" class="form-control" id="telefono" name="telefono" value="<?php echo htmlspecialchars($docente['telefono']); ?>">
                                     </div>
-                                    <div class="col">
-                                        <label for="direccion" class="form-label">Dirección</label>
-                                        <input type="text" class="form-control" id="direccion" name="direccion" value="<?php echo htmlspecialchars($docente['direccion']); ?>">
-                                    </div>
+                                    
                                 </div>
                                 <div class="row mb-3">
                                     <div class="col">
@@ -232,9 +236,16 @@ mysqli_close($conexion);
 
                                 <div class="row mb-3">
                                     <div class="col">
+                                        <label for="direccion" class="form-label">Dirección</label>
+                                        <input type="text" class="form-control" id="direccion" name="direccion" value="<?php echo htmlspecialchars($docente['direccion']); ?>">
+                                    </div>
+                                    <div class="col">
                                         <label for="areas_conocimiento" class="form-label">Áreas de Conocimiento</label>
                                         <input type="text" class="form-control" id="areas_conocimiento" name="areas_conocimiento" value="<?php echo htmlspecialchars($docente['areas_conocimiento']); ?>">
                                     </div>
+
+                                </div>
+                                <div class="row mb-3">
                                     <div class="col">
                                         <label for="foto" class="form-label">Foto</label>
                                         <input type="file" class="form-control" id="foto" name="foto">
@@ -242,6 +253,7 @@ mysqli_close($conexion);
                                             <img src="<?php echo htmlspecialchars($docente['foto']); ?>" alt="Foto del docente" class="img-thumbnail mt-2" width="150">
                                         <?php endif; ?>
                                     </div>
+
                                 </div>
                                 
                                 <br>

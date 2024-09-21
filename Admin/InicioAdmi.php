@@ -91,6 +91,9 @@ if ($mostrar = mysqli_fetch_array($query_admin)) {
                 <a class="nav-link text-white" href="UsuariosAdmin.html">Usuarios</a>
               </li>
               <li class="nav-item">
+                <a class="nav-link text-white" href="perfiladmin.php">Mi perfil</a>
+              </li>
+              <li class="nav-item">
                 <a class="nav-link text-white" href="misdatos.php">Mis datos</a>
               </li>
             </ul>

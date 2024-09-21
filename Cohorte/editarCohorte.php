@@ -57,19 +57,36 @@ if (!$conexion) {
     die("Error de conexión a la base de datos");
 }
 
-$stmt = mysqli_prepare($conexion, "SELECT nombre, fecha_inicio, fecha_fin, id_programa FROM cohortes WHERE id_cohorte = ?");
-mysqli_stmt_bind_param($stmt, 'i', $id_cohorte);
+// Obtener id_programa del usuario
+$id_programa_usuario = $_SESSION["id_programa"];
+
+// Verificar rol y ajustar consulta
+if ($_SESSION["rol"] == '1') { // Administrador
+    $stmt = mysqli_prepare($conexion, "SELECT nombre, fecha_inicio, fecha_fin, id_programa FROM cohortes WHERE id_cohorte = ?");
+    mysqli_stmt_bind_param($stmt, 'i', $id_cohorte);
+} else { // Asistentes y Coordinadores
+    $stmt = mysqli_prepare($conexion, "SELECT nombre, fecha_inicio, fecha_fin, id_programa FROM cohortes WHERE id_cohorte = ? AND id_programa = ?");
+    mysqli_stmt_bind_param($stmt, 'ii', $id_cohorte, $id_programa_usuario);
+}
+
 mysqli_stmt_execute($stmt);
 mysqli_stmt_bind_result($stmt, $nombre, $fecha_inicio, $fecha_fin, $id_programa);
-mysqli_stmt_fetch($stmt);
+if (!mysqli_stmt_fetch($stmt)) {
+    die("Cohorte no encontrado o no tienes permiso para editarlo.");
+}
 mysqli_stmt_close($stmt);
 
-// Obtener la lista de programas
-$stmt = mysqli_prepare($conexion, "SELECT id_programa, descripcion FROM programas");
+// Obtener la lista de programas solo para el usuario (asistentes y coordinadores)
+$programas = [];
+if ($_SESSION['rol'] == '1') { // Administrador
+    $stmt = mysqli_prepare($conexion, "SELECT id_programa, descripcion FROM programas");
+} else {
+    $stmt = mysqli_prepare($conexion, "SELECT id_programa, descripcion FROM programas WHERE id_programa = ?");
+    mysqli_stmt_bind_param($stmt, 'i', $id_programa_usuario);
+}
 mysqli_stmt_execute($stmt);
 mysqli_stmt_bind_result($stmt, $programa_id, $descripcion);
 
-$programas = [];
 while (mysqli_stmt_fetch($stmt)) {
     $programas[] = ['id_programa' => $programa_id, 'descripcion' => $descripcion];
 }
@@ -130,6 +147,9 @@ mysqli_close($conexion);
                                 <a class="nav-link text-white" href="../Admin/UsuariosAdmin.html">Usuarios</a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link text-white" href="../Admin/perfiladmin.php">Mi perfil</a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link text-white" href="../Admin/misdatos.php">Mis datos</a>
                             </li>
                         <?php elseif ($_SESSION['rol'] == '2'): ?>
@@ -172,7 +192,7 @@ mysqli_close($conexion);
                             <div class="col mx-5 px-5">
                                 <div class="row mb-3">
                                     <div class="col">
-                                        <label for="nombre" class="form-label">Nombre del Cohorte</label>
+                                        <label for="nombre" class="form-label">Cohorte</label>
                                         <input type="text" class="form-control" id="nombre" name="nombre" value="<?php echo htmlspecialchars($nombre); ?>" required>
                                     </div>
                                     <div class="col">

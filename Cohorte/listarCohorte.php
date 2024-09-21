@@ -1,3 +1,5 @@
+p
+Copiar código
 <?php
 include "../complementos/conexion.php";
 session_start();
@@ -13,11 +15,31 @@ if (!$conexion) {
     die("Error de conexión a la base de datos");
 }
 
-// Consulta para obtener la lista de cohortes, incluyendo el nombre y la descripción del programa
-$sql = "SELECT cohortes.id_cohorte, cohortes.nombre, cohortes.fecha_inicio, cohortes.fecha_fin, programas.descripcion 
-        FROM cohortes 
-        JOIN programas ON cohortes.id_programa = programas.id_programa";
-$query = mysqli_query($conexion, $sql);
+$id_programa = $_SESSION['id_programa'];
+$rol = $_SESSION['rol'];
+
+// Consulta para obtener la lista de cohortes
+if ($rol == '1') { // Administrador
+    $sql = "SELECT cohortes.id_cohorte, cohortes.nombre, cohortes.fecha_inicio, cohortes.fecha_fin, programas.descripcion, GROUP_CONCAT(docentes.nombre SEPARATOR ', ') AS nombres_docentes
+            FROM cohortes 
+            JOIN programas ON cohortes.id_programa = programas.id_programa
+            LEFT JOIN docentes ON cohortes.id_cohorte = docentes.id_cohorte
+            GROUP BY cohortes.id_cohorte";
+} else { // Asistente o Coordinador
+    $sql = "SELECT cohortes.id_cohorte, cohortes.nombre, cohortes.fecha_inicio, cohortes.fecha_fin, programas.descripcion, GROUP_CONCAT(docentes.nombre SEPARATOR ', ') AS nombres_docentes
+            FROM cohortes 
+            JOIN programas ON cohortes.id_programa = programas.id_programa 
+            LEFT JOIN docentes ON cohortes.id_cohorte = docentes.id_cohorte
+            WHERE cohortes.id_programa = ?
+            GROUP BY cohortes.id_cohorte";
+}
+
+$stmt = mysqli_prepare($conexion, $sql);
+if ($rol != '1') {
+    mysqli_stmt_bind_param($stmt, 'i', $id_programa); // 'i' para entero
+}
+mysqli_stmt_execute($stmt);
+$query = mysqli_stmt_get_result($stmt);
 
 if (!$query) {
     die("Error en la consulta: " . mysqli_error($conexion));
@@ -80,6 +102,9 @@ if (!$query) {
                                 <a class="nav-link text-white" href="../Admin/UsuariosAdmin.html">Usuarios</a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link text-white" href="../Admin/perfiladmin.php">Mi perfil</a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link text-white" href="../Admin/misdatos.php">Mis datos</a>
                             </li>
                         <?php elseif ($_SESSION['rol'] == '2'): ?>
@@ -118,11 +143,13 @@ if (!$query) {
                 <table class="table table-hover table-bordered">
                     <thead>
                         <tr>
-                            <th scope="col">ID Cohorte</th>
-                            <th scope="col">Nombre de la Cohorte</th>
+                            <th scope="col">ID</th>
+                            <th scope="col">Cohorte</th>
                             <th scope="col">Fecha de Inicio</th>
                             <th scope="col">Fecha de Fin</th>
-                            <th scope="col">Descripción del Programa</th>
+                            <th scope="col">Programa</th>
+                            <th scope="col">Estudiantes</th>
+                            <th scope="col">Docente</th> <!-- Nueva columna para Docente -->
                             <th scope="col">Acciones</th>
                         </tr>
                     </thead>
@@ -136,6 +163,12 @@ if (!$query) {
                             <td><?php echo htmlspecialchars($row['fecha_inicio']); ?></td>
                             <td><?php echo htmlspecialchars($row['fecha_fin']); ?></td>
                             <td><?php echo htmlspecialchars($row['descripcion']); ?></td>
+                            <td>
+                                <a href="verEstudiantes.php?id_cohorte=<?php echo $row['id_cohorte']; ?>" class="btn btn-warning btn-sm">Ver</a>
+                            </td>
+                            <td>
+                                <?php echo htmlspecialchars($row['nombres_docentes']); ?> <!-- Muestra los nombres de los docentes -->
+                            </td>
                             <td>
                                 <div class="btn-group">
                                     <a href="editarCohorte.php?id=<?php echo $row['id_cohorte']; ?>" class="btn btn-success btn-sm">Modificar</a>
@@ -163,6 +196,11 @@ if (!$query) {
                     </li>
                 </ul>
             </nav>
+
+            <div class="text-center mt-3">
+                <a href="descargar_reporte.php" class="btn btn-primary">Descargar Reporte</a>
+            </div>
+
         </div>
     </div>
 </div>
