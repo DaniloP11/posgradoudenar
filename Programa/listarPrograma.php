@@ -14,7 +14,7 @@ if (!$conexion) {
 }
 
 // Consulta para obtener la lista de programas
-$sql = "SELECT * FROM programas";
+$sql = "SELECT id_programa, codigo_SNIES, descripcion, logo, correo_contacto, telefono_contacto, lineas_trabajo, resolucion, fecha_generacion FROM programas";
 $query = mysqli_query($conexion, $sql);
 
 if (!$query) {
@@ -133,7 +133,6 @@ if (!$query) {
                             <th scope="col">Correo de Contacto</th>
                             <th scope="col">Teléfono de Contacto</th>
                             <th scope="col">Líneas de Trabajo</th>
-                            <th scope="col">Coordinador</th>
                             <th scope="col">Resolución</th>
                             <th scope="col">Fecha de Generación</th>
                             <th scope="col">Acciones</th>
@@ -142,12 +141,6 @@ if (!$query) {
                     <tbody>
                         <?php
                         while ($row = mysqli_fetch_array($query)) {
-                            // Obtener nombre del coordinador
-                            $id_coordinador = $row['id_coordinador'];
-                            $query_coordinador = mysqli_query($conexion, "SELECT nombre FROM coordinadores WHERE id_coordinador = '$id_coordinador'");
-                            $coordinador = mysqli_fetch_assoc($query_coordinador);
-                            $nombre_coordinador = $coordinador ? $coordinador['nombre'] : 'No asignado';
-
                             // Eliminar cualquier prefijo que empiece por 'contacto.'
                             $correo_contacto = preg_replace('/^contacto\./', '', $row['correo_contacto']);
                         ?>
@@ -165,7 +158,6 @@ if (!$query) {
                             <td><?php echo htmlspecialchars($correo_contacto); ?></td>
                             <td><?php echo htmlspecialchars($row['telefono_contacto']); ?></td>
                             <td><?php echo htmlspecialchars($row['lineas_trabajo']); ?></td>
-                            <td><?php echo htmlspecialchars($nombre_coordinador); ?></td>
                             <td><?php echo htmlspecialchars($row['resolucion']); ?></td>
                             <td><?php echo htmlspecialchars($row['fecha_generacion']); ?></td>
                             <td>

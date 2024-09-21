@@ -7,18 +7,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login</title>
   <link rel="icon" type="image/x-icon" href="img/icon.png">
-  <link rel="stylesheet" href="css/style.css">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet"
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
     integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.5/dist/umd/popper.min.js"
-    integrity="sha384-Xe+8cL9oJa6tN/veChSP7q+mnSPaj5Bcu9mPX5F5xIGE0DVittaqT5lorf0EI7Vk"
-    crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.min.js"
-    integrity="sha384-ODmDIVzN+pFdexxHEHFBQH3/9/vQ9uori45z4JjnFsRydbmQbmL5t1tQ0culUzyK"
-    crossorigin="anonymous"></script>
-  <script src='main.js'></script>
-  <script src="https://js.cx/libs/animate.js"></script>
-  <script src='/udetesis/js/animaciones.js'></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     body {
       background-image: url(img/font.png);
@@ -29,6 +20,31 @@
       background-image: url(img/117.jpeg);
       background-position: center;
       background-size: cover;
+    }
+
+    .form-control-icon {
+      position: relative;
+    }
+
+    .form-control-icon input {
+      padding-left: 2.5rem;
+    }
+
+    .form-control-icon .icon {
+      position: absolute;
+      left: 10px;
+      top: 70%;
+      transform: translateY(-50%);
+      color: #aaa;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 10px;
+      top: 75%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #aaa;
     }
   </style>
 </head>
@@ -59,32 +75,36 @@
       <div class="col bg d-none d-lg-block col-md-5 col-lg-5 col-xl-6 rounded">
         <!-- Imagen o contenido adicional aquí -->
       </div>
-      <!--MEDIDAD DEL FORMULARIO-->
-      <div class="col bg-white p-3 rounded-end">
+      <!--FORMULARIO-->
+      <div class="col bg-white p-4 rounded-end">
         <div class="text-end">
-          <img src="img/Logotipo01.png" width="100" alt="">
+          <img src="img/Logotipo01.png" width="100" alt="Logotipo">
         </div>
 
-        <h2 class="ww-bold text-center py-1">Bienvenido</h2>
+        <h2 class="fw-bold text-center py-3">Bienvenido</h2>
 
         <!--LOGIN-->
         <form method="post" action="login.php">
-          <div class="mb-4">
+          <div class="mb-4 form-control-icon">
             <label for="email" class="form-label">Correo electrónico</label>
-            <input type="email" class="form-control" name="email" id="email" required>
+            <input type="email" class="form-control" name="email" id="email" placeholder="Ingresa tu correo" required>
+            <i class="fas fa-user icon"></i>
           </div>
-          <div class="mb-4">
+          <div class="mb-4 form-control-icon">
             <label for="password" class="form-label">Contraseña</label>
-            <input type="password" id="password" class="form-control" name="password" required>
+            <input type="password" id="password" class="form-control" name="password" placeholder="Ingresa tu contraseña" required>
+            <i class="fas fa-lock icon"></i>
+            <i class="fas fa-eye toggle-password" onclick="togglePassword()"></i>
           </div>
-          <div class="mb-4 form-check">
-            <input type="checkbox" name="connected" class="form-check-input" onclick="verpassword()">
-            <label for="connected" class="form-check-label">Mostrar Contraseña</label>
+
+          <div class="d-flex justify-content-between mb-4">
+            <a href="recuperarContraseña/recuperar.html" class="text-muted">¿Olvidaste tu contraseña?</a>
           </div>
+        
 
           <div class="mb-4">
             <label for="rol" class="form-label">Rol de usuario</label>
-            <select name="rol" class="form-control" id="rol" required>
+            <select name="rol" class="form-select" id="rol" required>
               <option value="" disabled selected>Seleccionar</option>
               <option value="1">Administrador</option>
               <option value="2">Asistente</option>
@@ -100,14 +120,20 @@
     </div>
   </div>
 
-  <br><br>
-
   <script>
-    function verpassword() {
-      var tipo = document.getElementById("password");
-      tipo.type = tipo.type === "password" ? "text" : "password";
+    function togglePassword() {
+      const password = document.getElementById('password');
+      const icon = document.querySelector('.toggle-password');
+      if (password.type === 'password') {
+        password.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        password.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+      }
     }
   </script>
 
 </body>
+
 </html>

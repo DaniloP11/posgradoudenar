@@ -17,12 +17,13 @@ if (!$id_cohorte) {
 // Manejo del formulario
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Verificar que todos los campos obligatorios están llenos
-    $requiredFields = ['fecha_inicio', 'fecha_fin', 'id_programa'];
+    $requiredFields = ['nombre', 'fecha_inicio', 'fecha_fin', 'id_programa'];
     $missingFields = array_filter($requiredFields, fn($field) => empty($_POST[$field]));
 
     if ($missingFields) {
         echo "<script>alert('Todos los campos obligatorios deben estar llenos');</script>";
     } else {
+        $nombre = $_POST['nombre'];
         $fecha_inicio = $_POST['fecha_inicio'];
         $fecha_fin = $_POST['fecha_fin'];
         $id_programa = $_POST['id_programa'];
@@ -35,8 +36,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // Actualizar cohorte
-        $stmt = mysqli_prepare($conexion, "UPDATE cohortes SET fecha_inicio = ?, fecha_fin = ?, id_programa = ? WHERE id_cohorte = ?");
-        mysqli_stmt_bind_param($stmt, 'ssii', $fecha_inicio, $fecha_fin, $id_programa, $id_cohorte);
+        $stmt = mysqli_prepare($conexion, "UPDATE cohortes SET nombre = ?, fecha_inicio = ?, fecha_fin = ?, id_programa = ? WHERE id_cohorte = ?");
+        mysqli_stmt_bind_param($stmt, 'sssii', $nombre, $fecha_inicio, $fecha_fin, $id_programa, $id_cohorte);
 
         if (mysqli_stmt_execute($stmt)) {
             echo "<script>alert('Cohorte actualizado correctamente');</script>";
@@ -56,12 +57,11 @@ if (!$conexion) {
     die("Error de conexión a la base de datos");
 }
 
-$stmt = mysqli_prepare($conexion, "SELECT fecha_inicio, fecha_fin, id_programa FROM cohortes WHERE id_cohorte = ?");
+$stmt = mysqli_prepare($conexion, "SELECT nombre, fecha_inicio, fecha_fin, id_programa FROM cohortes WHERE id_cohorte = ?");
 mysqli_stmt_bind_param($stmt, 'i', $id_cohorte);
 mysqli_stmt_execute($stmt);
-mysqli_stmt_bind_result($stmt, $fecha_inicio, $fecha_fin, $id_programa);
+mysqli_stmt_bind_result($stmt, $nombre, $fecha_inicio, $fecha_fin, $id_programa);
 mysqli_stmt_fetch($stmt);
-
 mysqli_stmt_close($stmt);
 
 // Obtener la lista de programas
@@ -172,15 +172,9 @@ mysqli_close($conexion);
                             <div class="col mx-5 px-5">
                                 <div class="row mb-3">
                                     <div class="col">
-                                        <label for="fecha_inicio" class="form-label">Fecha de Inicio</label>
-                                        <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" value="<?php echo htmlspecialchars($fecha_inicio); ?>" required>
+                                        <label for="nombre" class="form-label">Nombre del Cohorte</label>
+                                        <input type="text" class="form-control" id="nombre" name="nombre" value="<?php echo htmlspecialchars($nombre); ?>" required>
                                     </div>
-                                    <div class="col">
-                                        <label for="fecha_fin" class="form-label">Fecha de Fin</label>
-                                        <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" value="<?php echo htmlspecialchars($fecha_fin); ?>" required>
-                                    </div>
-                                </div>
-                                <div class="row mb-3">
                                     <div class="col">
                                         <label for="id_programa" class="form-label">Programa</label>
                                         <select id="id_programa" name="id_programa" class="form-select" required>
@@ -193,6 +187,17 @@ mysqli_close($conexion);
                                         </select>
                                     </div>
                                 </div>
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <label for="fecha_inicio" class="form-label">Fecha de Inicio</label>
+                                        <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" value="<?php echo htmlspecialchars($fecha_inicio); ?>" required>
+                                    </div>
+                                    <div class="col">
+                                        <label for="fecha_fin" class="form-label">Fecha de Fin</label>
+                                        <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" value="<?php echo htmlspecialchars($fecha_fin); ?>" required>
+                                    </div>
+                                </div>
+                            
                                 <br>
                                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                                     <button class="btn btn-primary" type="submit">Actualizar</button>

@@ -13,8 +13,8 @@ if (!$conexion) {
     die("Error de conexión a la base de datos");
 }
 
-// Consulta para obtener la lista de cohortes y la descripción del programa
-$sql = "SELECT cohortes.id_cohorte, cohortes.fecha_inicio, cohortes.fecha_fin, programas.descripcion 
+// Consulta para obtener la lista de cohortes, incluyendo el nombre y la descripción del programa
+$sql = "SELECT cohortes.id_cohorte, cohortes.nombre, cohortes.fecha_inicio, cohortes.fecha_fin, programas.descripcion 
         FROM cohortes 
         JOIN programas ON cohortes.id_programa = programas.id_programa";
 $query = mysqli_query($conexion, $sql);
@@ -119,6 +119,7 @@ if (!$query) {
                     <thead>
                         <tr>
                             <th scope="col">ID Cohorte</th>
+                            <th scope="col">Nombre de la Cohorte</th>
                             <th scope="col">Fecha de Inicio</th>
                             <th scope="col">Fecha de Fin</th>
                             <th scope="col">Descripción del Programa</th>
@@ -131,6 +132,7 @@ if (!$query) {
                         ?>
                         <tr>
                             <td><?php echo htmlspecialchars($row['id_cohorte']); ?></td>
+                            <td><?php echo htmlspecialchars($row['nombre']); ?></td>
                             <td><?php echo htmlspecialchars($row['fecha_inicio']); ?></td>
                             <td><?php echo htmlspecialchars($row['fecha_fin']); ?></td>
                             <td><?php echo htmlspecialchars($row['descripcion']); ?></td>

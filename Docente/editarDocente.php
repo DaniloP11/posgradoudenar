@@ -20,8 +20,15 @@ if (!$conexion) {
     die("Error de conexión a la base de datos");
 }
 
-// Obtener los datos del docente
-$sql = "SELECT id_docente, nombre, identificacion, direccion, telefono, correo, foto, formacion_pregrado, formacion_posgrado, areas_conocimiento FROM docentes WHERE id_docente = ?";
+// Obtener los datos del docente, incluyendo id_programa y id_cohorte
+$sql = "SELECT d.id_docente, d.nombre, d.identificacion, d.direccion, d.telefono, d.correo, d.foto, 
+               d.formacion_pregrado, d.formacion_posgrado, d.areas_conocimiento, 
+               d.id_programa, d.id_cohorte, 
+               p.descripcion AS programa, c.nombre AS cohorte 
+        FROM docentes d 
+        LEFT JOIN programas p ON d.id_programa = p.id_programa 
+        LEFT JOIN cohortes c ON d.id_cohorte = c.id_cohorte 
+        WHERE d.id_docente = ?";
 $stmt = mysqli_prepare($conexion, $sql);
 mysqli_stmt_bind_param($stmt, 'i', $id_docente);
 mysqli_stmt_execute($stmt);
@@ -44,6 +51,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $formacion_pregrado = $_POST['formacion_pregrado'];
     $formacion_posgrado = $_POST['formacion_posgrado'];
     $areas_conocimiento = $_POST['areas_conocimiento'];
+    $id_programa = $_POST['id_programa'];
+    $id_cohorte = $_POST['id_cohorte'];
 
     // Manejo de la fotografía
     $foto = $docente['foto']; // Mantener la foto existente por defecto
@@ -62,10 +71,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Actualizar los datos del docente
-    $updateSql = "UPDATE docentes SET nombre = ?, identificacion = ?, correo = ?, telefono = ?, direccion = ?, foto = ?, formacion_pregrado = ?, formacion_posgrado = ?, areas_conocimiento = ? WHERE id_docente = ?";
+    $updateSql = "UPDATE docentes SET nombre = ?, identificacion = ?, correo = ?, telefono = ?, direccion = ?, foto = ?, formacion_pregrado = ?, formacion_posgrado = ?, areas_conocimiento = ?, id_programa = ?, id_cohorte = ? WHERE id_docente = ?";
     $stmt = mysqli_prepare($conexion, $updateSql);
     if ($stmt) {
-        mysqli_stmt_bind_param($stmt, 'sssssssssi', $nombre, $identificacion, $correo, $telefono, $direccion, $foto, $formacion_pregrado, $formacion_posgrado, $areas_conocimiento, $id_docente);
+        mysqli_stmt_bind_param($stmt, 'ssssssssssi', $nombre, $identificacion, $correo, $telefono, $direccion, $foto, $formacion_pregrado, $formacion_posgrado, $areas_conocimiento, $id_programa, $id_cohorte, $id_docente);
         if (mysqli_stmt_execute($stmt)) {
             echo "<script>alert('Docente actualizado correctamente');</script>";
         } else {
@@ -76,6 +85,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo "<script>alert('Error al preparar la consulta');</script>";
     }
 }
+
+// Obtener programas y cohortes para los select
+$programasSql = "SELECT id_programa, descripcion FROM programas";
+$programasResult = mysqli_query($conexion, $programasSql);
+
+$cohortesSql = "SELECT id_cohorte, nombre FROM cohortes";
+$cohortesResult = mysqli_query($conexion, $cohortesSql);
 
 mysqli_close($conexion);
 ?>
@@ -125,35 +141,17 @@ mysqli_close($conexion);
                 <div class="offcanvas-body">
                     <ul class="navbar-nav justify-content-start flex-grow-1 pe-3">
                         <?php if ($_SESSION['rol'] == '1'): ?>
-                            <li class="nav-item">
-                                <a class="nav-link active text-white" href="../Admin/InicioAdmi.php">Inicio</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="../Admin/UsuariosAdmin.html">Usuarios</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="../Admin/misdatos.php">Mis datos</a>
-                            </li>
+                            <li class="nav-item"><a class="nav-link active text-white" href="../Admin/InicioAdmi.php">Inicio</a></li>
+                            <li class="nav-item"><a class="nav-link text-white" href="../Admin/UsuariosAdmin.html">Usuarios</a></li>
+                            <li class="nav-item"><a class="nav-link text-white" href="../Admin/misdatos.php">Mis datos</a></li>
                         <?php elseif ($_SESSION['rol'] == '2'): ?>
-                            <li class="nav-item">
-                                <a class="nav-link active text-white" href="../Asistente/InicioAsiste.php">Inicio</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="../Asistente/UsuariosAsiste.html">Usuarios</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="../Asistente/misdatos.php">Mis datos</a>
-                            </li>
+                            <li class="nav-item"><a class="nav-link active text-white" href="../Asistente/InicioAsiste.php">Inicio</a></li>
+                            <li class="nav-item"><a class="nav-link text-white" href="../Asistente/UsuariosAsiste.html">Usuarios</a></li>
+                            <li class="nav-item"><a class="nav-link text-white" href="../Asistente/misdatos.php">Mis datos</a></li>
                         <?php elseif ($_SESSION['rol'] == '3'): ?>
-                            <li class="nav-item">
-                                <a class="nav-link active text-white" href="../Coordinador/InicioCoord.php">Inicio</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="../Coordinador/UsuariosCoord.html">Usuarios</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="../Coordinador/misdatos.php">Mis datos</a>
-                            </li>
+                            <li class="nav-item"><a class="nav-link active text-white" href="../Coordinador/InicioCoord.php">Inicio</a></li>
+                            <li class="nav-item"><a class="nav-link text-white" href="../Coordinador/UsuariosCoord.html">Usuarios</a></li>
+                            <li class="nav-item"><a class="nav-link text-white" href="../Coordinador/misdatos.php">Mis datos</a></li>
                         <?php endif; ?>
                     </ul>
                 </div>
@@ -191,20 +189,9 @@ mysqli_close($conexion);
                                         <label for="telefono" class="form-label">Teléfono</label>
                                         <input type="text" class="form-control" id="telefono" name="telefono" value="<?php echo htmlspecialchars($docente['telefono']); ?>">
                                     </div>
-                                </div>
-                                <div class="row mb-3">
                                     <div class="col">
                                         <label for="direccion" class="form-label">Dirección</label>
                                         <input type="text" class="form-control" id="direccion" name="direccion" value="<?php echo htmlspecialchars($docente['direccion']); ?>">
-                                    </div>
-                                </div>
-                                <div class="row mb-3">
-                                    <div class="col">
-                                        <label for="foto" class="form-label">Foto</label>
-                                        <input type="file" class="form-control" id="foto" name="foto">
-                                        <?php if ($docente['foto']): ?>
-                                            <img src="<?php echo htmlspecialchars($docente['foto']); ?>" alt="Foto del docente" class="img-thumbnail mt-2" width="150">
-                                        <?php endif; ?>
                                     </div>
                                 </div>
                                 <div class="row mb-3">
@@ -217,12 +204,46 @@ mysqli_close($conexion);
                                         <input type="text" class="form-control" id="formacion_posgrado" name="formacion_posgrado" value="<?php echo htmlspecialchars($docente['formacion_posgrado']); ?>">
                                     </div>
                                 </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <label for="id_programa" class="form-label">Programa</label>
+                                        <select class="form-select" id="id_programa" name="id_programa" required>
+                                            <option value="">Seleccione un programa</option>
+                                            <?php while ($programa = mysqli_fetch_assoc($programasResult)): ?>
+                                                <option value="<?php echo $programa['id_programa']; ?>" <?php echo $programa['id_programa'] == $docente['id_programa'] ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($programa['descripcion']); ?>
+                                                </option>
+                                            <?php endwhile; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <label for="id_cohorte" class="form-label">Cohorte</label>
+                                        <select class="form-select" id="id_cohorte" name="id_cohorte" required>
+                                            <option value="">Seleccione una cohorte</option>
+                                            <?php while ($cohorte = mysqli_fetch_assoc($cohortesResult)): ?>
+                                                <option value="<?php echo $cohorte['id_cohorte']; ?>" <?php echo $cohorte['id_cohorte'] == $docente['id_cohorte'] ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($cohorte['nombre']); ?>
+                                                </option>
+                                            <?php endwhile; ?>
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <div class="row mb-3">
                                     <div class="col">
                                         <label for="areas_conocimiento" class="form-label">Áreas de Conocimiento</label>
                                         <input type="text" class="form-control" id="areas_conocimiento" name="areas_conocimiento" value="<?php echo htmlspecialchars($docente['areas_conocimiento']); ?>">
                                     </div>
+                                    <div class="col">
+                                        <label for="foto" class="form-label">Foto</label>
+                                        <input type="file" class="form-control" id="foto" name="foto">
+                                        <?php if ($docente['foto']): ?>
+                                            <img src="<?php echo htmlspecialchars($docente['foto']); ?>" alt="Foto del docente" class="img-thumbnail mt-2" width="150">
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
+                                
                                 <br>
                                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                                     <button class="btn btn-primary" type="submit">Actualizar</button>

@@ -8,9 +8,39 @@ if (!isset($_SESSION["email"]) || !isset($_SESSION["rol"])) {
     exit();
 }
 
+$programas = [];
+$cohortes = [];
+
+// Obtener la lista de programas
+$conexion = conexion();
+if (!$conexion) {
+    die("Error de conexión a la base de datos");
+}
+
+$stmt = mysqli_prepare($conexion, "SELECT id_programa, descripcion FROM programas");
+mysqli_stmt_execute($stmt);
+mysqli_stmt_bind_result($stmt, $programa_id, $descripcion);
+
+while (mysqli_stmt_fetch($stmt)) {
+    $programas[] = ['id_programa' => $programa_id, 'descripcion' => $descripcion];
+}
+
+mysqli_stmt_close($stmt);
+
+// Obtener la lista de cohortes
+$stmt = mysqli_prepare($conexion, "SELECT id_cohorte, nombre FROM cohortes");
+mysqli_stmt_execute($stmt);
+mysqli_stmt_bind_result($stmt, $cohorte_id, $nombre);
+
+while (mysqli_stmt_fetch($stmt)) {
+    $cohortes[] = ['id_cohorte' => $cohorte_id, 'nombre' => $nombre];
+}
+
+mysqli_stmt_close($stmt);
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Verificar que todos los campos obligatorios están llenos
-    $requiredFields = ['nombre', 'identificacion', 'direccion', 'telefono', 'correo', 'formacion_pregrado', 'formacion_posgrado', 'areas_conocimiento'];
+    $requiredFields = ['nombre', 'identificacion', 'direccion', 'telefono', 'correo', 'formacion_pregrado', 'formacion_posgrado', 'areas_conocimiento', 'id_programa', 'id_cohorte'];
     $missingFields = array_filter($requiredFields, fn($field) => empty($_POST[$field]));
 
     if ($missingFields) {
@@ -24,6 +54,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $formacion_pregrado = $_POST['formacion_pregrado'];
         $formacion_posgrado = $_POST['formacion_posgrado'];
         $areas_conocimiento = $_POST['areas_conocimiento'];
+        $id_programa = $_POST['id_programa'];
+        $id_cohorte = $_POST['id_cohorte'];
 
         // Manejo de la fotografía
         $foto = null;
@@ -32,7 +64,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             // Verificar si la carpeta 'uploads' existe, si no, crearla
             if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);  // Crear el directorio con permisos adecuados
+                mkdir($uploadDir, 0755, true);
             }
         
             // Nombre único para la imagen para evitar sobreescrituras
@@ -40,14 +72,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $fotoRuta = $uploadDir . $fotoNombre;
         
             if (move_uploaded_file($_FILES['foto']['tmp_name'], $fotoRuta)) {
-                $foto = $fotoRuta;  // Guardar la ruta del archivo subido en la base de datos
+                $foto = $fotoRuta;
             } else {
                 echo "<script>alert('Error al subir la imagen');</script>";
             }
         }
         
         // Conexión a la base de datos
-        $conexion = conexion();
         if (!$conexion) {
             echo "<script>alert('Error de conexión a la base de datos');</script>";
             exit();
@@ -63,8 +94,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo "<script>alert('El correo ya existe');</script>";
         } else {
             // Insertar nuevo docente
-            $stmt = mysqli_prepare($conexion, "INSERT INTO docentes (nombre, identificacion, direccion, telefono, correo, foto, formacion_pregrado, formacion_posgrado, areas_conocimiento) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            mysqli_stmt_bind_param($stmt, 'sssssssss', $nombre, $identificacion, $direccion, $telefono, $correo, $foto, $formacion_pregrado, $formacion_posgrado, $areas_conocimiento);
+            $stmt = mysqli_prepare($conexion, "INSERT INTO docentes (nombre, identificacion, direccion, telefono, correo, foto, formacion_pregrado, formacion_posgrado, areas_conocimiento, id_programa, id_cohorte) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, 'sssssssssss', $nombre, $identificacion, $direccion, $telefono, $correo, $foto, $formacion_pregrado, $formacion_posgrado, $areas_conocimiento, $id_programa, $id_cohorte);
 
             if (mysqli_stmt_execute($stmt)) {
                 echo "<script>alert('Docente creado correctamente');</script>";
@@ -216,6 +247,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <div class="col">
                                         <label for="areas_conocimiento" class="form-label">Áreas de Conocimiento</label>
                                         <textarea class="form-control" id="areas_conocimiento" name="areas_conocimiento" rows="3" required></textarea>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <label for="id_programa" class="form-label">Programa</label>
+                                        <select class="form-select" id="id_programa" name="id_programa" required>
+                                            <option value="" disabled selected>Seleccione un programa</option>
+                                            <?php foreach ($programas as $programa): ?>
+                                                <option value="<?php echo htmlspecialchars($programa['id_programa']); ?>">
+                                                    <?php echo htmlspecialchars($programa['descripcion']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <label for="id_cohorte" class="form-label">Cohorte</label>
+                                        <select class="form-select" id="id_cohorte" name="id_cohorte" required>
+                                            <option value="" disabled selected>Seleccione una cohorte</option>
+                                            <?php foreach ($cohortes as $cohorte): ?>
+                                                <option value="<?php echo htmlspecialchars($cohorte['id_cohorte']); ?>">
+                                                    <?php echo htmlspecialchars($cohorte['nombre']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
                                     </div>
                                 </div>
                                 <br>

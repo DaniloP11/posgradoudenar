@@ -7,7 +7,7 @@ include "../complementos/conexion.php";
 <head>
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <title>Trabajo de grado</title>
+    <title>Coordinadores</title>
     <link rel="icon" type="image/x-icon" href="../img/icon.png">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/style2.css">
@@ -19,6 +19,12 @@ include "../complementos/conexion.php";
         body {
             background-image: url(../img/font.png);
             background-size: cover;
+        }
+        .foto-coordinador {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 50%;
         }
     </style>
 
@@ -76,6 +82,7 @@ include "../complementos/conexion.php";
                         <thead>
                             <tr>
                                 <th scope="col">#</th>
+                                <th scope="col">Foto</th> <!-- Nueva columna para la foto -->
                                 <th scope="col">Nombre</th>
                                 <th scope="col">Identificación</th>
                                 <th scope="col">Correo</th>
@@ -85,6 +92,7 @@ include "../complementos/conexion.php";
                                 <th scope="col">Fecha de Nacimiento</th>
                                 <th scope="col">Fecha de Vinculación</th>
                                 <th scope="col">Acuerdo de Nombramiento</th>
+                                <th scope="col">Programa</th>
                                 <th scope="col">Acciones</th>
                             </tr>
                         </thead>
@@ -92,17 +100,27 @@ include "../complementos/conexion.php";
                             <?php
                             $con = conexion();
 
-                            // Consulta para obtener los datos de la tabla 'coordinadores'
-                            $sql = "SELECT * FROM coordinadores";
+                            // Consulta para obtener los datos de 'coordinadores' y el nombre del 'programa'
+                            $sql = "SELECT coordinadores.*, programas.descripcion AS programa_descripcion 
+                                    FROM coordinadores 
+                                    JOIN programas ON coordinadores.id_programa = programas.id_programa";
                             $query = mysqli_query($con, $sql);
                             $i = 0;
 
                             while ($row = mysqli_fetch_array($query)) {
                                 $i++;
                                 $pdf_url = '../Coordinador/uploads/' . $row['acuerdo_nombramiento'];
+                                $foto_url = '../Coordinador/fotos/' . $row['foto']; // Ruta de la foto
                             ?>
                             <tr>
                                 <td><?php echo $i; ?></td>
+                                <td>
+                                    <?php if (!empty($row['foto'])): ?>
+                                        <img src="<?php echo htmlspecialchars($foto_url); ?>" alt="Foto" class="foto-coordinador">
+                                    <?php else: ?>
+                                        No disponible
+                                    <?php endif; ?>
+                                </td>
                                 <td><?php echo htmlspecialchars($row['nombre']); ?></td>
                                 <td><?php echo htmlspecialchars($row['identificacion']); ?></td>
                                 <td><?php echo htmlspecialchars($row['correo']); ?></td>
@@ -120,9 +138,10 @@ include "../complementos/conexion.php";
                                         No disponible
                                     <?php endif; ?>
                                 </td>
+                                <td><?php echo htmlspecialchars($row['programa_descripcion']); ?></td> <!-- Mostrar nombre del programa -->
                                 <td>
                                     <div class="btn-group">
-                                        <a href="editarCoordinador.php?id_coordinador=<?php echo $row['id_coordinador']; ?>" class="btn btn-success btn-sm">Editar</a>
+                                        <a href="editarCoordinador.php?id_coordinador=<?php echo $row['id_coordinador']; ?>" class="btn btn-success btn-sm">Modificar</a>
                                         <a href="#" class="btn btn-danger btn-sm" onclick="confirmDelete('eliminarCoordinador.php?id_coordinador=<?php echo $row['id_coordinador']; ?>')">Eliminar</a>
                                     </div>
                                 </td>

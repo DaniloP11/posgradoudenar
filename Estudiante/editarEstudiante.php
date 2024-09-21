@@ -107,8 +107,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // Cargar cohortes y programas para los dropdowns
-$cohortes_query = mysqli_query($conexion, "SELECT id_cohorte FROM cohortes");
+$cohortes_query = mysqli_query($conexion, "SELECT id_cohorte, nombre FROM cohortes");
 $programas_query = mysqli_query($conexion, "SELECT id_programa, descripcion FROM programas");
+
 
 // Cerrar la conexión
 mysqli_close($conexion);
@@ -122,6 +123,10 @@ mysqli_close($conexion);
     <title>Editar Estudiante</title>
     <link rel="icon" type="image/x-icon" href="../img/icon.png">
     <link rel="stylesheet" href="../css/style.css">
+    <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.5/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
     <style>
         body {
@@ -210,29 +215,28 @@ mysqli_close($conexion);
                                         <label for="nombre" class="form-label">Nombre</label>
                                         <input type="text" class="form-control" id="nombre" name="nombre" value="<?php echo htmlspecialchars($estudiante['nombre']); ?>" required>
                                     </div>
-                
-                                </div>
-                                <div class="row mb-3">
                                     <div class="col">
                                         <label for="codigo_estudiantil" class="form-label">Código Estudiantil</label>
                                         <input type="text" class="form-control" id="codigo_estudiantil" name="codigo_estudiantil" value="<?php echo htmlspecialchars($estudiante['codigo_estudiantil']); ?>" required>
                                     </div>
+                                </div>
+                                <div class="row mb-3">
+                                    
                                     <div class="col">
                                         <label for="correo" class="form-label">Correo Electrónico</label>
                                         <input type="email" class="form-control" id="correo" name="correo" value="<?php echo htmlspecialchars($estudiante['correo']); ?>" required>
                                     </div>
-                                </div>
-                                <div class="row mb-3">
                                     <div class="col">
                                         <label for="telefono" class="form-label">Teléfono</label>
                                         <input type="text" class="form-control" id="telefono" name="telefono" value="<?php echo htmlspecialchars($estudiante['telefono']); ?>" required>
                                     </div>
+                                </div>
+                                <div class="row mb-3">
+                                    
                                     <div class="col">
                                         <label for="direccion" class="form-label">Dirección</label>
                                         <input type="text" class="form-control" id="direccion" name="direccion" value="<?php echo htmlspecialchars($estudiante['direccion']); ?>" required>
                                     </div>
-                                </div>
-                                <div class="row mb-3">
                                     <div class="col">
                                         <label for="genero" class="form-label">Género</label>
                                         <select class="form-select" id="genero" name="genero" required>
@@ -242,62 +246,67 @@ mysqli_close($conexion);
                                             <option value="Otro" <?php echo ($estudiante['genero'] == 'Otro') ? 'selected' : ''; ?>>Otro</option>
                                         </select>
                                     </div>
+                                </div>
+                                <div class="row mb-3">
+                                    
                                     <div class="col">
                                         <label for="fecha_nacimiento" class="form-label">Fecha de Nacimiento</label>
                                         <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" value="<?php echo htmlspecialchars($estudiante['fecha_nacimiento']); ?>" required>
                                     </div>
-                                </div>
-                                <div class="row mb-3">
                                     <div class="col">
                                         <label for="semestre" class="form-label">Semestre</label>
                                         <input type="number" class="form-control" id="semestre" name="semestre" value="<?php echo htmlspecialchars($estudiante['semestre']); ?>" required>
                                     </div>
-                                    <div class="col">
-                                        <label for="estado_civil" class="form-label">Estado Civil</label>
-                                        <select class="form-select" id="estado_civil" name="estado_civil" required>
-                                            <option value="">Seleccione un estado civil</option>
-                                            <option value="Soltero" <?php echo ($estudiante['estado_civil'] == 'Soltero') ? 'selected' : ''; ?>>Soltero</option>
-                                            <option value="Casado" <?php echo ($estudiante['estado_civil'] == 'Casado') ? 'selected' : ''; ?>>Casado</option>
-                                            <option value="Divorciado" <?php echo ($estudiante['estado_civil'] == 'Divorciado') ? 'selected' : ''; ?>>Divorciado</option>
-                                            <option value="Viudo" <?php echo ($estudiante['estado_civil'] == 'Viudo') ? 'selected' : ''; ?>>Viudo</option>
-                                        </select>
-                                    </div>
-                                </div>
+                                    
+                                </div> 
                                 <div class="row mb-3">
-                                    <div class="col">
-                                        <label for="id_cohorte" class="form-label">Cohorte</label>
-                                        <select class="form-select" id="id_cohorte" name="id_cohorte" required>
-                                            <option value="">Seleccione una cohorte</option>
-                                            <?php while ($row = mysqli_fetch_assoc($cohortes_query)) {
-                                                echo "<option value='{$row['id_cohorte']}'" . ($estudiante['id_cohorte'] == $row['id_cohorte'] ? ' selected' : '') . ">{$row['id_cohorte']}</option>";
-                                            } ?>
-                                        </select>
-                                    </div>
                                     <div class="col">
                                         <label for="fecha_ingreso" class="form-label">Fecha de Ingreso</label>
                                         <input type="date" class="form-control" id="fecha_ingreso" name="fecha_ingreso" value="<?php echo htmlspecialchars($estudiante['fecha_ingreso']); ?>" required>
                                     </div>
-                                </div>
-                                <div class="row mb-3">
                                     <div class="col">
                                         <label for="fecha_egreso" class="form-label">Fecha de Egreso</label>
                                         <input type="date" class="form-control" id="fecha_egreso" name="fecha_egreso" value="<?php echo htmlspecialchars($estudiante['fecha_egreso']); ?>" required>
                                     </div>
-                                    <div class="col">
-                                        <label for="id_programa" class="form-label">Programa</label>
-                                        <select class="form-select" id="id_programa" name="id_programa" required>
-                                            <option value="">Seleccione un programa</option>
-                                            <?php while ($row = mysqli_fetch_assoc($programas_query)) {
-                                                echo "<option value='{$row['id_programa']}'" . ($estudiante['id_programa'] == $row['id_programa'] ? ' selected' : '') . ">{$row['descripcion']}</option>";
-                                            } ?>
-                                        </select>
-                                    </div>
                                 </div>
+
                                 <div class="row mb-3">
+                                        <div class="col">
+                                            <label for="estado_civil" class="form-label">Estado Civil</label>
+                                            <select class="form-select" id="estado_civil" name="estado_civil" required>
+                                                <option value="">Seleccione un estado civil</option>
+                                                <option value="Soltero" <?php echo ($estudiante['estado_civil'] == 'Soltero') ? 'selected' : ''; ?>>Soltero</option>
+                                                <option value="Casado" <?php echo ($estudiante['estado_civil'] == 'Casado') ? 'selected' : ''; ?>>Casado</option>
+                                                <option value="Divorciado" <?php echo ($estudiante['estado_civil'] == 'Divorciado') ? 'selected' : ''; ?>>Divorciado</option>
+                                                <option value="Viudo" <?php echo ($estudiante['estado_civil'] == 'Viudo') ? 'selected' : ''; ?>>Viudo</option>
+                                            </select>
+                                        </div>
+                                        <div class="col">
+                                            <label for="id_cohorte" class="form-label">Cohorte</label>
+                                            <select class="form-select" id="id_cohorte" name="id_cohorte" required>
+                                                <option value="">Seleccione una cohorte</option>
+                                                <?php while ($row = mysqli_fetch_assoc($cohortes_query)) {
+                                                    echo "<option value='{$row['id_cohorte']}'" . ($estudiante['id_cohorte'] == $row['id_cohorte'] ? ' selected' : '') . ">{$row['nombre']}</option>";
+                                                } ?>
+                                            </select>
+                                        </div>
+                                </div>
+            
+
+                                <div class="row mb-3">
+                                    <div class="col">
+                                            <label for="id_programa" class="form-label">Programa</label>
+                                            <select class="form-select" id="id_programa" name="id_programa" required>
+                                                <option value="">Seleccione un programa</option>
+                                                <?php while ($row = mysqli_fetch_assoc($programas_query)) {
+                                                    echo "<option value='{$row['id_programa']}'" . ($estudiante['id_programa'] == $row['id_programa'] ? ' selected' : '') . ">{$row['descripcion']}</option>";
+                                                } ?>
+                                            </select>
+                                    </div>
                                     <div class="col">
                                         <label for="fotografia" class="form-label">Fotografía</label>
                                         <input type="file" class="form-control" id="fotografia" name="fotografia" accept="image/*">
-                                        <p>Fotografía actual: <img src="uploads/<?php echo htmlspecialchars($estudiante['fotografia']); ?>" alt="Fotografía" style="width: 60px; height: auto;"></p>
+                                        <p><br><img src="uploads/<?php echo htmlspecialchars($estudiante['fotografia']); ?>" alt="Fotografía" style="width: 60px; height: auto;"></p>
                                     </div>
                                 </div>
                                 <br>

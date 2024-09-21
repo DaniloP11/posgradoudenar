@@ -13,9 +13,12 @@ if (!$conexion) {
     die("Error de conexión a la base de datos");
 }
 
-// Consulta para obtener la lista de docentes
-$sql = "SELECT id_docente, nombre, identificacion, direccion, telefono, correo, foto, formacion_pregrado, formacion_posgrado, areas_conocimiento
-        FROM docentes";
+// Consulta para obtener la lista de docentes con programas y cohortes
+$sql = "SELECT d.id_docente, d.nombre, d.identificacion, d.direccion, d.telefono, d.correo, d.foto, d.formacion_pregrado, d.formacion_posgrado, d.areas_conocimiento,
+               p.descripcion AS programa, c.nombre AS cohorte
+        FROM docentes d
+        LEFT JOIN programas p ON d.id_programa = p.id_programa
+        LEFT JOIN cohortes c ON d.id_cohorte = c.id_cohorte";
 $query = mysqli_query($conexion, $sql);
 
 if (!$query) {
@@ -24,8 +27,7 @@ if (!$query) {
 ?>
 
 <!DOCTYPE html>
-<html>
-
+<html lang="es">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -73,35 +75,17 @@ if (!$query) {
                 <div class="offcanvas-body">
                     <ul class="navbar-nav justify-content-start flex-grow-1 pe-3">
                         <?php if ($_SESSION['rol'] == '1'): ?>
-                            <li class="nav-item">
-                                <a class="nav-link active text-white" href="../Admin/InicioAdmi.php">Inicio</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="../Admin/UsuariosAdmin.html">Usuarios</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="../Admin/misdatos.php">Mis datos</a>
-                            </li>
+                            <li class="nav-item"><a class="nav-link active text-white" href="../Admin/InicioAdmi.php">Inicio</a></li>
+                            <li class="nav-item"><a class="nav-link text-white" href="../Admin/UsuariosAdmin.html">Usuarios</a></li>
+                            <li class="nav-item"><a class="nav-link text-white" href="../Admin/misdatos.php">Mis datos</a></li>
                         <?php elseif ($_SESSION['rol'] == '2'): ?>
-                            <li class="nav-item">
-                                <a class="nav-link active text-white" href="../Asistente/InicioAsiste.php">Inicio</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="../Asistente/UsuariosAsiste.html">Usuarios</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="../Asistente/misdatos.php">Mis datos</a>
-                            </li>
+                            <li class="nav-item"><a class="nav-link active text-white" href="../Asistente/InicioAsiste.php">Inicio</a></li>
+                            <li class="nav-item"><a class="nav-link text-white" href="../Asistente/UsuariosAsiste.html">Usuarios</a></li>
+                            <li class="nav-item"><a class="nav-link text-white" href="../Asistente/misdatos.php">Mis datos</a></li>
                         <?php elseif ($_SESSION['rol'] == '3'): ?>
-                            <li class="nav-item">
-                                <a class="nav-link active text-white" href="../Coordinador/InicioCoord.php">Inicio</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="../Coordinador/UsuariosCoord.html">Usuarios</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="../Coordinador/misdatos.php">Mis datos</a>
-                            </li>
+                            <li class="nav-item"><a class="nav-link active text-white" href="../Coordinador/InicioCoord.php">Inicio</a></li>
+                            <li class="nav-item"><a class="nav-link text-white" href="../Coordinador/UsuariosCoord.html">Usuarios</a></li>
+                            <li class="nav-item"><a class="nav-link text-white" href="../Coordinador/misdatos.php">Mis datos</a></li>
                         <?php endif; ?>
                     </ul>
                 </div>
@@ -119,12 +103,14 @@ if (!$query) {
                     <thead>
                         <tr>
                             <th scope="col">ID Docente</th>
+                            <th scope="col">Foto</th>
                             <th scope="col">Nombre</th>
                             <th scope="col">Identificación</th>
                             <th scope="col">Dirección</th>
                             <th scope="col">Teléfono</th>
                             <th scope="col">Correo</th>
-                            <th scope="col">Foto</th>
+                            <th scope="col">Programa</th>
+                            <th scope="col">Cohorte</th>
                             <th scope="col">Formación Pregrado</th>
                             <th scope="col">Formación Posgrado</th>
                             <th scope="col">Áreas de Conocimiento</th>
@@ -140,17 +126,14 @@ if (!$query) {
                             $telefono = htmlspecialchars($row['telefono']);
                             $correo = htmlspecialchars($row['correo']);
                             $foto = htmlspecialchars($row['foto']);
+                            $programa = htmlspecialchars($row['programa']);
+                            $cohorte = htmlspecialchars($row['cohorte']);
                             $formacion_pregrado = htmlspecialchars($row['formacion_pregrado']);
                             $formacion_posgrado = htmlspecialchars($row['formacion_posgrado']);
                             $areas_conocimiento = htmlspecialchars($row['areas_conocimiento']);
                         ?>
                         <tr>
                             <td><?php echo $id_docente; ?></td>
-                            <td><?php echo $nombre; ?></td>
-                            <td><?php echo $identificacion; ?></td>
-                            <td><?php echo $direccion; ?></td>
-                            <td><?php echo $telefono; ?></td>
-                            <td><?php echo $correo; ?></td>
                             <td>
                                 <?php if ($foto): ?>
                                     <img src="<?php echo $foto; ?>" alt="Foto del docente" style="width: 60px; height: auto;">
@@ -158,6 +141,13 @@ if (!$query) {
                                     No disponible
                                 <?php endif; ?>
                             </td>
+                            <td><?php echo $nombre; ?></td>
+                            <td><?php echo $identificacion; ?></td>
+                            <td><?php echo $direccion; ?></td>
+                            <td><?php echo $telefono; ?></td>
+                            <td><?php echo $correo; ?></td>
+                            <td><?php echo $programa; ?></td>
+                            <td><?php echo $cohorte; ?></td>
                             <td><?php echo $formacion_pregrado; ?></td>
                             <td><?php echo $formacion_posgrado; ?></td>
                             <td><?php echo $areas_conocimiento; ?></td>
@@ -176,24 +166,26 @@ if (!$query) {
             <!-- Pagination Placeholder (if needed) -->
             <nav aria-label="Page navigation example">
                 <ul class="pagination mt-3">
-                    <li class="page-item disabled">
-                        <a class="page-link">Anterior</a>
-                    </li>
+                    <li class="page-item disabled"><a class="page-link">Anterior</a></li>
                     <li class="page-item"><a class="page-link" href="#">1</a></li>
                     <li class="page-item"><a class="page-link" href="#">2</a></li>
                     <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item">
-                        <a class="page-link" href="#">Siguiente</a>
-                    </li>
+                    <li class="page-item"><a class="page-link" href="#">Siguiente</a></li>
                 </ul>
             </nav>
-
         </div>
     </div>
 </div>
 
-</body>
+<script>
+function confirmDelete(url) {
+    if (confirm("¿Estás seguro de que deseas eliminar este docente?")) {
+        window.location.href = url;
+    }
+}
+</script>
 
+</body>
 </html>
 
 <?php

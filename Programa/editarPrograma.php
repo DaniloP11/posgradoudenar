@@ -21,7 +21,7 @@ if (!$programa) {
 }
 
 if (!empty($_POST)) {
-    if (empty($_POST['codigo_SNIES']) || empty($_POST['descripcion']) || empty($_POST['lineas_trabajo']) || empty($_POST['id_coordinador']) || empty($_POST['resolucion']) || empty($_POST['fecha_generacion'])) {
+    if (empty($_POST['codigo_SNIES']) || empty($_POST['descripcion']) || empty($_POST['lineas_trabajo']) || empty($_POST['resolucion']) || empty($_POST['fecha_generacion']) || empty($_POST['correo_contacto']) || empty($_POST['telefono_contacto'])) {
         ?>
         <script>
             alert("Todos los campos obligatorios deben estar llenos");
@@ -31,9 +31,10 @@ if (!empty($_POST)) {
         $codigo_SNIES = $_POST['codigo_SNIES'];
         $descripcion = $_POST['descripcion'];
         $lineas_trabajo = $_POST['lineas_trabajo'];
-        $id_coordinador = $_POST['id_coordinador'];
         $resolucion = $_POST['resolucion'];
         $fecha_generacion = $_POST['fecha_generacion'];
+        $correo_contacto = $_POST['correo_contacto'];
+        $telefono_contacto = $_POST['telefono_contacto'];
 
         // Manejar la carga del archivo de logo
         $logo = $programa['logo']; // Mantener el logo actual si no se sube uno nuevo
@@ -50,7 +51,7 @@ if (!empty($_POST)) {
             $logo = 'uploads/' . basename($_FILES['logo']['name']); // La ruta relativa para la base de datos
         }
 
-        $query_update_programa = mysqli_query($conexion, "UPDATE programas SET codigo_SNIES = '$codigo_SNIES', descripcion = '$descripcion', logo = '$logo', lineas_trabajo = '$lineas_trabajo', id_coordinador = '$id_coordinador', resolucion = '$resolucion', fecha_generacion = '$fecha_generacion' WHERE id_programa = '$id_programa'");
+        $query_update_programa = mysqli_query($conexion, "UPDATE programas SET codigo_SNIES = '$codigo_SNIES', descripcion = '$descripcion', logo = '$logo', lineas_trabajo = '$lineas_trabajo', resolucion = '$resolucion', fecha_generacion = '$fecha_generacion', correo_contacto = '$correo_contacto', telefono_contacto = '$telefono_contacto' WHERE id_programa = '$id_programa'");
 
         if ($query_update_programa) {
             ?>
@@ -142,48 +143,23 @@ if (!empty($_POST)) {
                                         <label for="codigo_SNIES" class="form-label">Código SNIES</label>
                                         <input type="text" class="form-control" id="codigo_SNIES" name="codigo_SNIES" value="<?php echo htmlspecialchars($programa['codigo_SNIES']); ?>">
                                     </div>
-                                </div>
-                                <div class="row mb-3">
                                     <div class="col">
                                         <label for="descripcion" class="form-label">Descripción</label>
-                                        <textarea class="form-control" id="descripcion" name="descripcion" rows="3"><?php echo htmlspecialchars($programa['descripcion']); ?></textarea>
-                                    </div>
-                                </div>
-                                <div class="row mb-3">
-                                    <div class="col">
-                                        <label for="lineas_trabajo" class="form-label">Líneas de Trabajo</label>
-                                        <textarea class="form-control" id="lineas_trabajo" name="lineas_trabajo" rows="3"><?php echo htmlspecialchars($programa['lineas_trabajo']); ?></textarea>
-                                    </div>
-                                </div>
-                                <div class="row mb-3">
-                                    <div class="col">
-                                        <label for="id_coordinador" class="form-label">Coordinador</label>
-                                        <select class="form-select" id="id_coordinador" name="id_coordinador">
-                                            <?php
-                                            // Obtener la lista de coordinadores de la base de datos
-                                            $query_coordinadores = mysqli_query($conexion, "SELECT id_coordinador, nombre FROM coordinadores");
-
-                                            // Verificar si la consulta fue exitosa
-                                            if ($query_coordinadores) {
-                                                // Recorrer la lista de coordinadores y crear las opciones del select
-                                                while ($coordinador = mysqli_fetch_assoc($query_coordinadores)) {
-                                                    // Determinar si el coordinador actual es el seleccionado
-                                                    $selected = ($coordinador['id_coordinador'] == $programa['id_coordinador']) ? 'selected' : '';
-                                                    
-                                                    // Imprimir la opción del select
-                                                    echo "<option value=\"{$coordinador['id_coordinador']}\" $selected>";
-                                                    echo htmlspecialchars($coordinador['nombre']);
-                                                    echo "</option>";
-                                                }
-                                            } else {
-                                                // Mensaje de error si la consulta falla
-                                                echo "<option value=\"\">Error al cargar coordinadores</option>";
-                                            }
-                                            ?>
-                                        </select>
+                                        <input type="text" class="form-control" id="descripcion" name="descripcion" value="<?php echo htmlspecialchars($programa['descripcion']); ?>">
                                     </div>
                                 </div>
 
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <label for="correo_contacto" class="form-label">Correo de Contacto</label>
+                                        <input type="email" class="form-control" id="correo_contacto" name="correo_contacto" value="<?php echo htmlspecialchars($programa['correo_contacto']); ?>">
+                                    </div>
+                                    <div class="col">
+                                        <label for="telefono_contacto" class="form-label">Teléfono de Contacto</label>
+                                        <input type="text" class="form-control" id="telefono_contacto" name="telefono_contacto" value="<?php echo htmlspecialchars($programa['telefono_contacto']); ?>">
+                                    </div>
+                                </div>
+    
                                 <div class="row mb-3">
                                     <div class="col">
                                         <label for="resolucion" class="form-label">Resolución</label>
@@ -194,7 +170,12 @@ if (!empty($_POST)) {
                                         <input type="date" class="form-control" id="fecha_generacion" name="fecha_generacion" value="<?php echo htmlspecialchars($programa['fecha_generacion']); ?>">
                                     </div>
                                 </div>
+                                
                                 <div class="row mb-3">
+                                    <div class="col">
+                                        <label for="lineas_trabajo" class="form-label">Líneas de Trabajo</label>
+                                        <textarea class="form-control" id="lineas_trabajo" name="lineas_trabajo" rows="3"><?php echo htmlspecialchars($programa['lineas_trabajo']); ?></textarea>
+                                    </div>
                                     <div class="col">
                                         <label for="logo" class="form-label">Logo</label>
                                         <input type="file" class="form-control" id="logo" name="logo">

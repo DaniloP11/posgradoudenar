@@ -10,12 +10,13 @@ if (!isset($_SESSION["email"]) || !isset($_SESSION["rol"])) {
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Verificar que todos los campos obligatorios están llenos
-    $requiredFields = ['fecha_inicio', 'fecha_fin', 'id_programa'];
+    $requiredFields = ['nombre', 'fecha_inicio', 'fecha_fin', 'id_programa'];
     $missingFields = array_filter($requiredFields, fn($field) => empty($_POST[$field]));
 
     if ($missingFields) {
         echo "<script>alert('Todos los campos obligatorios deben estar llenos');</script>";
     } else {
+        $nombre = $_POST['nombre'];
         $fecha_inicio = $_POST['fecha_inicio'];
         $fecha_fin = $_POST['fecha_fin'];
         $id_programa = $_POST['id_programa'];
@@ -27,9 +28,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit();
         }
 
-        // Insertar nuevo cohorte (Nota: Asumiendo que id_cohorte es autoincremental)
-        $stmt = mysqli_prepare($conexion, "INSERT INTO cohortes (fecha_inicio, fecha_fin, id_programa) VALUES (?, ?, ?)");
-        mysqli_stmt_bind_param($stmt, 'ssi', $fecha_inicio, $fecha_fin, $id_programa);
+        // Insertar nuevo cohorte
+        $stmt = mysqli_prepare($conexion, "INSERT INTO cohortes (nombre, fecha_inicio, fecha_fin, id_programa) VALUES (?, ?, ?, ?)");
+        mysqli_stmt_bind_param($stmt, 'sssi', $nombre, $fecha_inicio, $fecha_fin, $id_programa);
 
         if (mysqli_stmt_execute($stmt)) {
             echo "<script>alert('Cohorte creado correctamente');</script>";
@@ -156,10 +157,29 @@ mysqli_close($conexion);
         <h3 align="center">REGISTRO DE COHORTES</h3>
         <div class="row">
             <div class="col py-5">
-                <div class="mx-5 bg-light" style="border-radius: 2%; ">
+                <div class="mx-5 bg-light" style="border-radius: 2%;">
                     <form action="" method="post">
                         <div class="row mb-3 needs-validation" novalidate>
                             <div class="col mx-5 px-5">
+                                <!-- Campo para el nombre de la cohorte -->
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <label for="nombre" class="form-label">Nombre de la Cohorte</label>
+                                        <input type="text" class="form-control" id="nombre" name="nombre" required>
+                                    </div>
+                                    <div class="col">
+                                        <label for="id_programa" class="form-label">Programa</label>
+                                        <select class="form-select" id="id_programa" name="id_programa" required>
+                                            <option value="" disabled selected>Seleccione un programa</option>
+                                            <?php foreach ($programas as $programa): ?>
+                                                <option value="<?php echo htmlspecialchars($programa['id_programa']); ?>">
+                                                    <?php echo htmlspecialchars($programa['descripcion']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <!-- Campo para la fecha de inicio -->
                                 <div class="row mb-3">
                                     <div class="col">
@@ -173,20 +193,6 @@ mysqli_close($conexion);
                                     </div>
                                 </div>
 
-                                <!-- Campo para seleccionar el programa -->
-                                <div class="row mb-3">
-                                    <div class="col">
-                                        <label for="id_programa" class="form-label">Programa</label>
-                                        <select class="form-select" id="id_programa" name="id_programa" required>
-                                            <option value="" disabled selected>Seleccione un programa</option>
-                                            <?php foreach ($programas as $programa): ?>
-                                                <option value="<?php echo htmlspecialchars($programa['id_programa']); ?>">
-                                                    <?php echo htmlspecialchars($programa['descripcion']); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                </div>
 
                                 <!-- Botones para enviar o cancelar el formulario -->
                                 <br>

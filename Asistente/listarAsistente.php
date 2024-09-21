@@ -75,13 +75,15 @@ include "../complementos/conexion.php";
                     <thead>
                         <tr>
                             <th scope="col">#</th>
+                            <th scope="col">Fotografía</th>
                             <th scope="col">Nombre</th>
                             <th scope="col">Correo</th>
                             <th scope="col">Teléfono</th>
                             <th scope="col">Dirección</th>
                             <th scope="col">Género</th>
                             <th scope="col">Fecha de Nacimiento</th>
-                            <th scope="col">Fotografía</th>
+                            <th scope="col">Programa</th>
+                            <th scope="col">Coordinador</th>
                             <th scope="col">Acciones</th>
                         </tr>
                     </thead>
@@ -89,8 +91,11 @@ include "../complementos/conexion.php";
                         <?php
                         $con = conexion();
 
-                        // Consulta para obtener los datos de la tabla 'asistentes'
-                        $sql = "SELECT * FROM asistentes";
+                        // Consulta para obtener los datos de la tabla 'asistentes' junto con 'programas' y 'coordinadores'
+                        $sql = "SELECT a.*, p.descripcion AS programa, c.nombre AS coordinador 
+                                FROM asistentes a 
+                                LEFT JOIN programas p ON a.id_programa = p.id_programa 
+                                LEFT JOIN coordinadores c ON a.id_coordinador = c.id_coordinador";
                         $query = mysqli_query($con, $sql);
                         $i = 0;
 
@@ -99,12 +104,6 @@ include "../complementos/conexion.php";
                         ?>
                         <tr>
                             <td><?php echo $i; ?></td>
-                            <td><?php echo htmlspecialchars($row['nombre']); ?></td>
-                            <td><?php echo htmlspecialchars($row['correo']); ?></td>
-                            <td><?php echo htmlspecialchars($row['telefono']); ?></td>
-                            <td><?php echo htmlspecialchars($row['direccion']); ?></td>
-                            <td><?php echo htmlspecialchars($row['genero']); ?></td>
-                            <td><?php echo htmlspecialchars($row['fecha_nacimiento']); ?></td>
                             <td>
                                 <?php if ($row['fotografia']): ?>
                                     <img src="../Asistente/uploads/<?php echo htmlspecialchars($row['fotografia']); ?>" alt="Fotografía" style="width: 60px; height: auto;">
@@ -112,6 +111,14 @@ include "../complementos/conexion.php";
                                     No disponible
                                 <?php endif; ?>
                             </td>
+                            <td><?php echo htmlspecialchars($row['nombre']); ?></td>
+                            <td><?php echo htmlspecialchars($row['correo']); ?></td>
+                            <td><?php echo htmlspecialchars($row['telefono']); ?></td>
+                            <td><?php echo htmlspecialchars($row['direccion']); ?></td>
+                            <td><?php echo htmlspecialchars($row['genero']); ?></td>
+                            <td><?php echo htmlspecialchars($row['fecha_nacimiento']); ?></td>
+                            <td><?php echo htmlspecialchars($row['programa']); ?></td>
+                            <td><?php echo htmlspecialchars($row['coordinador']); ?></td>
                             <td>
                                 <div class="btn-group">
                                     <a href="editarAsistente.php?id=<?php echo $row['id_asistente']; ?>" class="btn btn-success btn-sm">Modificar</a>

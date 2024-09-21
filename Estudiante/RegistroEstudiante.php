@@ -117,7 +117,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 // Cargar cohortes y programas para el dropdown
 $conexion = conexion();
-$cohortes_query = mysqli_query($conexion, "SELECT id_cohorte FROM cohortes");
+$cohortes_query = mysqli_query($conexion, "SELECT id_cohorte, nombre FROM cohortes"); // Modificado
 $programas_query = mysqli_query($conexion, "SELECT id_programa, descripcion FROM programas");
 mysqli_close($conexion);
 ?>
@@ -221,33 +221,33 @@ mysqli_close($conexion);
                                     <div class="col">
                                         <label for="nombre" class="form-label">Nombre</label>
                                         <input type="text" class="form-control" id="nombre" name="nombre" required>
-                                    </div>
-                                </div>
-                                <div class="row mb-3">
+                                    </div> 
                                     <div class="col">
                                         <label for="identificacion" class="form-label">Identificación</label>
                                         <input type="text" class="form-control" id="identificacion" name="identificacion" required>
                                     </div>
+                                </div>
+                                <div class="row mb-3">
                                     <div class="col">
                                         <label for="codigo_estudiantil" class="form-label">Código Estudiantil</label>
                                         <input type="text" class="form-control" id="codigo_estudiantil" name="codigo_estudiantil" required>
                                     </div>
-                                </div>
-                                <div class="row mb-3">
                                     <div class="col">
                                         <label for="correo" class="form-label">Correo Electrónico</label>
                                         <input type="email" class="form-control" id="correo" name="correo" required>
                                     </div>
+                                </div>
+                                <div class="row mb-3">
                                     <div class="col">
                                         <label for="telefono" class="form-label">Teléfono</label>
                                         <input type="text" class="form-control" id="telefono" name="telefono" required>
                                     </div>
-                                </div>
-                                <div class="row mb-3">
                                     <div class="col">
                                         <label for="direccion" class="form-label">Dirección</label>
                                         <input type="text" class="form-control" id="direccion" name="direccion" required>
                                     </div>
+                                </div>
+                                <div class="row mb-3">
                                     <div class="col">
                                         <label for="genero" class="form-label">Género</label>
                                         <select class="form-select" id="genero" name="genero" required>
@@ -255,6 +255,16 @@ mysqli_close($conexion);
                                             <option value="Masculino">Masculino</option>
                                             <option value="Femenino">Femenino</option>
                                             <option value="Otro">Otro</option>
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <label for="estado_civil" class="form-label">Estado Civil</label>
+                                        <select class="form-select" id="estado_civil" name="estado_civil" required>
+                                            <option value="">Seleccione un estado civil</option>
+                                            <option value="Soltero">Soltero</option>
+                                            <option value="Casado">Casado</option>
+                                            <option value="Divorciado">Divorciado</option>
+                                            <option value="Viudo">Viudo</option>
                                         </select>
                                     </div>
                                 </div>
@@ -270,27 +280,6 @@ mysqli_close($conexion);
                                 </div>
                                 <div class="row mb-3">
                                     <div class="col">
-                                        <label for="estado_civil" class="form-label">Estado Civil</label>
-                                        <select class="form-select" id="estado_civil" name="estado_civil" required>
-                                            <option value="">Seleccione un estado civil</option>
-                                            <option value="Soltero">Soltero</option>
-                                            <option value="Casado">Casado</option>
-                                            <option value="Divorciado">Divorciado</option>
-                                            <option value="Viudo">Viudo</option>
-                                        </select>
-                                    </div>
-                                    <div class="col">
-                                        <label for="id_cohorte" class="form-label">Cohorte</label>
-                                        <select class="form-select" id="id_cohorte" name="id_cohorte" required>
-                                            <option value="">Seleccione una cohorte</option>
-                                            <?php while ($row = mysqli_fetch_assoc($cohortes_query)) {
-                                                echo "<option value='{$row['id_cohorte']}'>{$row['id_cohorte']}</option>";
-                                            } ?>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="row mb-3">
-                                    <div class="col">
                                         <label for="fecha_ingreso" class="form-label">Fecha de Ingreso</label>
                                         <input type="date" class="form-control" id="fecha_ingreso" name="fecha_ingreso" required>
                                     </div>
@@ -301,6 +290,15 @@ mysqli_close($conexion);
                                 </div>
                                 <div class="row mb-3">
                                     <div class="col">
+                                        <label for="id_cohorte" class="form-label">Cohorte</label>
+                                        <select class="form-select" id="id_cohorte" name="id_cohorte" required>
+                                            <option value="">Seleccione una cohorte</option>
+                                            <?php while ($row = mysqli_fetch_assoc($cohortes_query)) {
+                                                echo "<option value='{$row['id_cohorte']}'>{$row['nombre']}</option>"; // Modificado
+                                            } ?>
+                                        </select>
+                                    </div>
+                                    <div class="col">
                                         <label for="id_programa" class="form-label">Programa</label>
                                         <select class="form-select" id="id_programa" name="id_programa" required>
                                             <option value="">Seleccione un programa</option>
@@ -309,6 +307,8 @@ mysqli_close($conexion);
                                             } ?>
                                         </select>
                                     </div>
+                                </div>
+                                <div class="row mb-3">
                                     <div class="col">
                                         <label for="fotografia" class="form-label">Fotografía</label>
                                         <input type="file" class="form-control" id="fotografia" name="fotografia" accept="image/*" required>

@@ -14,9 +14,10 @@ if (!$conexion) {
 }
 
 // Consulta para obtener la lista de estudiantes con la descripción del programa
-$sql = "SELECT e.*, p.descripcion 
+$sql = "SELECT e.*, p.descripcion, c.nombre AS cohorte_nombre 
         FROM estudiantes e
-        JOIN programas p ON e.id_programa = p.id_programa";
+        JOIN programas p ON e.id_programa = p.id_programa
+        JOIN cohortes c ON e.id_cohorte = c.id_cohorte";
 $query = mysqli_query($conexion, $sql);
 
 if (!$query) {
@@ -34,9 +35,9 @@ if (!$query) {
     <link rel="icon" type="image/x-icon" href="../img/icon.png">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/style2.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.5/dist/umd/popper.min.js" integrity="sha384-Xe+8cL9oJa6tN/veChSP7q+mnSPaj5Bcu9mPX5F5xIGE0DVittaqT5lorf0EI7Vk" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.min.js" integrity="sha384-ODmDIVzN+pFdexxHEHFBQH3/9/vQ9uori45z4JjnFsRydbmQbmL5t1tQ0culUzyK" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.5/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.min.js"></script>
 
     <style>
         body {
@@ -49,7 +50,6 @@ if (!$query) {
 <body>
 
 <div class="col-3">
-
     <nav class="navbar navbar-dark bg-dark fixed-top">
         <div class="container-fluid">
             <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar" aria-controls="offcanvasDarkNavbar">
@@ -109,7 +109,6 @@ if (!$query) {
             </div>
         </div>
     </nav>
-
 </div>
 
 <div class="container mt-5 pt-5">
@@ -121,6 +120,7 @@ if (!$query) {
                     <thead>
                         <tr>
                             <th scope="col">ID Estudiante</th>
+                            <th scope="col">Fotografía</th>
                             <th scope="col">Nombre</th>
                             <th scope="col">Identificación</th>
                             <th scope="col">Código Estudiantil</th>
@@ -132,10 +132,9 @@ if (!$query) {
                             <th scope="col">Semestre</th>
                             <th scope="col">Estado Civil</th>
                             <th scope="col">Cohorte</th>
-                            <th scope="col">Fotografía</th>
+                            <th scope="col">Programa</th>
                             <th scope="col">Fecha de Ingreso</th>
                             <th scope="col">Fecha de Egreso</th>
-                            <th scope="col">Programa</th>
                             <th scope="col">Acciones</th>
                         </tr>
                     </thead>
@@ -143,6 +142,13 @@ if (!$query) {
                         <?php while ($row = mysqli_fetch_array($query)) { ?>
                         <tr>
                             <td><?php echo htmlspecialchars($row['id_estudiante']); ?></td>
+                            <td>
+                                <?php if ($row['fotografia']): ?>
+                                    <img src="uploads/<?php echo htmlspecialchars($row['fotografia']); ?>" alt="Fotografía" style="width: 60px; height: auto;">
+                                <?php else: ?>
+                                    No disponible
+                                <?php endif; ?>
+                            </td>
                             <td><?php echo htmlspecialchars($row['nombre']); ?></td>
                             <td><?php echo htmlspecialchars($row['identificacion']); ?></td>
                             <td><?php echo htmlspecialchars($row['codigo_estudiantil']); ?></td>
@@ -153,17 +159,10 @@ if (!$query) {
                             <td><?php echo htmlspecialchars($row['fecha_nacimiento']); ?></td>
                             <td><?php echo htmlspecialchars($row['semestre']); ?></td>
                             <td><?php echo htmlspecialchars($row['estado_civil']); ?></td>
-                            <td><?php echo htmlspecialchars($row['id_cohorte']); ?></td>
-                            <td>
-                                <?php if ($row['fotografia']): ?>
-                                    <img src="uploads/<?php echo htmlspecialchars($row['fotografia']); ?>" alt="Fotografía" style="width: 60px; height: auto;">
-                                <?php else: ?>
-                                    No disponible
-                                <?php endif; ?>
-                            </td>
+                            <td><?php echo htmlspecialchars($row['cohorte_nombre']); ?></td>
+                            <td><?php echo htmlspecialchars($row['descripcion']); ?></td>
                             <td><?php echo htmlspecialchars($row['fecha_ingreso']); ?></td>
                             <td><?php echo htmlspecialchars($row['fecha_egreso']); ?></td>
-                            <td><?php echo htmlspecialchars($row['descripcion']); ?></td>
                             <td>
                                 <div class="btn-group">
                                     <a href="editarEstudiante.php?id=<?php echo $row['id_estudiante']; ?>" class="btn btn-success btn-sm">Modificar</a>

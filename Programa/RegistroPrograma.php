@@ -2,7 +2,7 @@
 include "../complementos/conexion.php";
 
 if (!empty($_POST)) {
-    if (empty($_POST['descripcion']) || empty($_POST['codigo_SNIES']) || empty($_POST['correo_contacto']) || empty($_POST['telefono_contacto']) || empty($_POST['lineas_trabajo']) || empty($_POST['id_coordinador']) || empty($_POST['resolucion']) || empty($_POST['fecha_generacion'])) {
+    if (empty($_POST['descripcion']) || empty($_POST['codigo_SNIES']) || empty($_POST['correo_contacto']) || empty($_POST['telefono_contacto']) || empty($_POST['lineas_trabajo']) || empty($_POST['resolucion']) || empty($_POST['fecha_generacion'])) {
         ?>
         <script>
             alert("Todos los campos obligatorios deben estar llenos");
@@ -14,7 +14,6 @@ if (!empty($_POST)) {
         $correo_contacto = $_POST['correo_contacto'];
         $telefono_contacto = $_POST['telefono_contacto'];
         $lineas_trabajo = $_POST['lineas_trabajo'];
-        $id_coordinador = $_POST['id_coordinador'];
         $resolucion = $_POST['resolucion'];
         $fecha_generacion = $_POST['fecha_generacion'];
 
@@ -41,8 +40,8 @@ if (!empty($_POST)) {
         }
 
         // Insertar en la base de datos
-        $query_insert_programa = mysqli_query(conexion(), "INSERT INTO programas(nombre_programa, codigo_SNIES, descripcion, logo, correo_contacto, telefono_contacto, lineas_trabajo, id_coordinador, resolucion, fecha_generacion)
-            VALUES ('$descripcion', '$codigo_SNIES', '$descripcion', '$logo', '$correo_contacto', '$telefono_contacto', '$lineas_trabajo', '$id_coordinador', '$resolucion', '$fecha_generacion')");
+        $query_insert_programa = mysqli_query(conexion(), "INSERT INTO programas(descripcion, codigo_SNIES, correo_contacto, telefono_contacto, lineas_trabajo, resolucion, fecha_generacion, logo)
+        VALUES ('$descripcion', '$codigo_SNIES', '$correo_contacto', '$telefono_contacto', '$lineas_trabajo', '$resolucion', '$fecha_generacion', '$logo')");
 
         if ($query_insert_programa) {
             ?>
@@ -160,46 +159,34 @@ if (!empty($_POST)) {
                                         <input type="text" class="form-control" id="telefono_contacto" name="telefono_contacto">
                                     </div>
                                 </div>
+
                                 <div class="row mb-3">
-                                    <div class="col">
-                                        <label for="lineas_trabajo" class="form-label">Líneas de Trabajo</label>
-                                        <textarea class="form-control" id="lineas_trabajo" name="lineas_trabajo" rows="3"></textarea>
-                                    </div>
-                                </div>
-                                <div class="row mb-3">
-                                    <div class="col">
-                                        <label for="id_coordinador" class="form-label">Coordinador</label>
-                                        <select class="form-select" id="id_coordinador" name="id_coordinador">
-                                            <?php
-                                            // Obtener coordinadores de la base de datos
-                                            $query_coordinadores = mysqli_query(conexion(), "SELECT id_coordinador, nombre FROM coordinadores");
-                                            while ($coordinador = mysqli_fetch_assoc($query_coordinadores)) {
-                                                echo "<option value=\"{$coordinador['id_coordinador']}\">{$coordinador['nombre']}</option>";
-                                            }
-                                            ?>
-                                        </select>
-                                    </div>
                             
                                     <div class="col">
                                         <label for="resolucion" class="form-label">Resolución</label>
                                         <input type="text" class="form-control" id="resolucion" name="resolucion">
                                     </div>
-                                    
-                                </div>
-                                <div class="row mb-3">
-                                <div class="col">
+                                    <div class="col">
                                         <label for="fecha_generacion" class="form-label">Fecha de Generación</label>
                                         <input type="date" class="form-control" id="fecha_generacion" name="fecha_generacion">
                                     </div>
+                                    
+                                </div>
+                                <div class="row mb-3">
+                                    
                                     <div class="col">
                                         <label for="logo" class="form-label">Logo</label>
                                         <input type="file" class="form-control" id="logo" name="logo">
+                                    </div>
+                                    <div class="col">
+                                        <label for="lineas_trabajo" class="form-label">Líneas de Trabajo</label>
+                                        <textarea class="form-control" id="lineas_trabajo" name="lineas_trabajo" rows="3"></textarea>
                                     </div>
                                 </div>
                                 <br>
                                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                                     <button class="btn btn-primary" type="submit">Registrar</button>
-                                    <button id="cancelar-btn" class="btn btn-secondary" type="button">Cancelar</button>
+                                    <button class="btn btn-secondary" type="button" onclick="window.location.href='../Admin/UsuariosAdmin.html'">Cancelar</button>
                                 </div>
                                 <br><br>
                             </div>

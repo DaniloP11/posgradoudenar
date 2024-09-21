@@ -14,7 +14,11 @@ if (isset($_GET['id_coordinador'])) {
         exit;
     }
 
-    // Manejo del archivo PDF para el acuerdo de nombramiento
+    // Obtener la lista de programas
+    $query_programa = mysqli_query(conexion(), "SELECT * FROM programas");
+    $programas = mysqli_fetch_all($query_programa, MYSQLI_ASSOC);
+
+    // Manejo del archivo PDF para el acuerdo de nombramiento y foto
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $nombre = $_POST['nombre'];
         $identificacion = $_POST['identificacion'];
@@ -24,40 +28,56 @@ if (isset($_GET['id_coordinador'])) {
         $genero = $_POST['genero'];
         $fecha_nacimiento = $_POST['fecha_nacimiento'];
         $fecha_vinculacion = $_POST['fecha_vinculacion'];
-        $contraseña = $_POST['contraseña'];
-        $confcontraseña = $_POST['confcontraseña'];
+        $id_programa = $_POST['id_programa'];
 
-        // Verificar coincidencia de contraseñas
-        if ($contraseña !== $confcontraseña) {
-            echo "<script>alert('La contraseña no coincide');</script>";
-        } else {
-            // Manejo del archivo PDF para el acuerdo de nombramiento
-            $acuerdo_nombramiento = $coordinador['acuerdo_nombramiento'];
-            if (isset($_FILES['acuerdo_nombramiento']) && $_FILES['acuerdo_nombramiento']['error'] == 0) {
-                $upload_dir = '../Coordinador/uploads';
-                if (!is_dir($upload_dir)) {
-                    mkdir($upload_dir, 0777, true);
-                }
-                $upload_file = $upload_dir . basename($_FILES['acuerdo_nombramiento']['name']);
-                if (move_uploaded_file($_FILES['acuerdo_nombramiento']['tmp_name'], $upload_file)) {
-                    // Eliminar el archivo viejo si existe
-                    if ($acuerdo_nombramiento && file_exists($upload_dir . $acuerdo_nombramiento)) {
-                        unlink($upload_dir . $acuerdo_nombramiento);
-                    }
-                    $acuerdo_nombramiento = $_FILES['acuerdo_nombramiento']['name'];
-                } else {
-                    echo "<script>alert('Error al cargar el acuerdo de nombramiento');</script>";
-                }
+        // Manejo del archivo PDF para el acuerdo de nombramiento
+        $acuerdo_nombramiento = $coordinador['acuerdo_nombramiento'];
+        if (isset($_FILES['acuerdo_nombramiento']) && $_FILES['acuerdo_nombramiento']['error'] == 0) {
+            $upload_dir = '../Coordinador/uploads/';
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
             }
-
-            // Actualización en la base de datos
-            $query_update_coordinador = mysqli_query(conexion(), "UPDATE coordinadores SET nombre = '$nombre', identificacion = '$identificacion', correo = '$correo', telefono = '$telefono', direccion = '$direccion', genero = '$genero', fecha_nacimiento = '$fecha_nacimiento', fecha_vinculacion = '$fecha_vinculacion', acuerdo_nombramiento = '$acuerdo_nombramiento', contraseña = '$contraseña' WHERE id_coordinador = $id_coordinador");
-
-            if ($query_update_coordinador) {
-                echo "<script>alert('Coordinador actualizado correctamente'); window.location.href='listarCoordinador.php';</script>";
+            $upload_file = $upload_dir . basename($_FILES['acuerdo_nombramiento']['name']);
+            if (move_uploaded_file($_FILES['acuerdo_nombramiento']['tmp_name'], $upload_file)) {
+                if ($acuerdo_nombramiento && file_exists($upload_dir . $acuerdo_nombramiento)) {
+                    unlink($upload_dir . $acuerdo_nombramiento);
+                }
+                $acuerdo_nombramiento = $_FILES['acuerdo_nombramiento']['name'];
             } else {
-                echo "<script>alert('Error al actualizar el coordinador');</script>";
+                echo "<script>alert('Error al cargar el acuerdo de nombramiento');</script>";
             }
+        }
+
+        // Manejo de la foto del coordinador
+        $foto = $coordinador['foto'];
+        $upload_dir_foto = '../Coordinador/fotos/';
+        if (isset($_FILES['foto']) && $_FILES['foto']['error'] == 0) {
+            if (!is_dir($upload_dir_foto)) {
+                mkdir($upload_dir_foto, 0777, true);
+            }
+            $upload_file_foto = $upload_dir_foto . basename($_FILES['foto']['name']);
+            if (move_uploaded_file($_FILES['foto']['tmp_name'], $upload_file_foto)) {
+                if ($foto && file_exists($upload_dir_foto . $foto)) {
+                    unlink($upload_dir_foto . $foto);
+                }
+                $foto = $_FILES['foto']['name'];
+            } else {
+                echo "<script>alert('Error al cargar la foto');</script>";
+            }
+        }
+
+        // Actualización en la base de datos
+        $query_update_coordinador = mysqli_query(conexion(), 
+            "UPDATE coordinadores 
+            SET nombre = '$nombre', identificacion = '$identificacion', correo = '$correo', telefono = '$telefono', direccion = '$direccion', 
+            genero = '$genero', fecha_nacimiento = '$fecha_nacimiento', fecha_vinculacion = '$fecha_vinculacion', acuerdo_nombramiento = '$acuerdo_nombramiento', foto = '$foto', id_programa = $id_programa
+            WHERE id_coordinador = $id_coordinador"
+        );
+
+        if ($query_update_coordinador) {
+            echo "<script>alert('Coordinador actualizado correctamente'); window.location.href='listarCoordinador.php';</script>";
+        } else {
+            echo "<script>alert('Error al actualizar el coordinador');</script>";
         }
     }
 } else {
@@ -82,42 +102,44 @@ if (isset($_GET['id_coordinador'])) {
             background-image: url(../img/font.png);
             background-size: cover;
         }
+        .foto-preview {
+            width: 100px; /* Ajusta el tamaño de la imagen aquí */
+            height: auto;
+        }
     </style>
 </head>
 <body>
-    <div class="col-3">
+<div class="col-3">
         <nav class="navbar navbar-dark bg-dark fixed-top">
             <div class="container-fluid">
                 <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar" aria-controls="offcanvasDarkNavbar">
-                    <span class="navbar-toggler-icon"></span>
+                <span class="navbar-toggler-icon"></span>
                 </button>
 
                 <div class="btn-group">
                     <button type="button" class="btn btn-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                         Sesión Administrador
                     </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="../index.html">Cerrar sesión</a></li>
-                    </ul>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="../index.html">Cerrar sesión</a></li>
+                </ul>
                 </div>
-
                 <div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="offcanvasDarkNavbar" aria-labelledby="offcanvasDarkNavbarLabel">
                     <div class="offcanvas-header">
                         <h5 class="offcanvas-title" id="offcanvasDarkNavbarLabel">Administrador</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                     </div>
-
                     <div class="offcanvas-body">
                         <ul class="navbar-nav justify-content-start flex-grow-1 pe-3">
-                            <li class="nav-item">
-                                <a class="nav-link active text-white" href="../Admin/InicioAdmi.php">Inicio</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="../Admin/UsuariosAdmin.html">Usuarios</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" href="../Admin/misdatos.php">Mis datos</a>
-                            </li>
+                        <li class="nav-item">
+                            <a class="nav-link active text-white" href="../Admin/InicioAdmi.php">Inicio</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="../Admin/UsuariosAdmin.html">Usuarios</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="../Admin/misdatos.php">Mis datos</a>
+                        </li>
                         </ul>
                     </div>
                 </div>
@@ -133,81 +155,97 @@ if (isset($_GET['id_coordinador'])) {
                 <div class="col py-5">
                     <div class="mx-5 bg-light" style="border-radius: 2%;">
                         <form action="" method="post" enctype="multipart/form-data">
-                            <div class="row mb-3">
+                            <div class="row mb-3 needs-validation" novalidate>
                                 <div class="col mx-5 px-5">
-                                    <label for="nombre" class="form-label">Nombre</label>
-                                    <input type="text" class="form-control" id="nombre" name="nombre" value="<?php echo $coordinador['nombre']; ?>">
-                                </div>
-                                <div class="col mx-5 px-5">
-                                    <label for="identificacion" class="form-label">Identificación</label>
-                                    <input type="text" class="form-control" id="identificacion" name="identificacion" value="<?php echo $coordinador['identificacion']; ?>">
-                                </div>
-                            </div>
+                                    <div class="row mb-3">
+                                        <div class="col mx-5 px-5">
+                                            <label for="nombre" class="form-label">Nombre</label>
+                                            <input type="text" class="form-control" id="nombre" name="nombre" value="<?php echo $coordinador['nombre']; ?>">
+                                        </div>
+                                        <div class="col mx-5 px-5">
+                                            <label for="identificacion" class="form-label">Identificación</label>
+                                            <input type="text" class="form-control" id="identificacion" name="identificacion" value="<?php echo $coordinador['identificacion']; ?>">
+                                        </div>
+                                    </div>
 
-                            <div class="row mb-3">
-                                <div class="col mx-5 px-5">
-                                    <label for="correo" class="form-label">Correo Electrónico</label>
-                                    <input type="email" class="form-control" id="correo" name="correo" value="<?php echo $coordinador['correo']; ?>">
-                                </div>
-                                <div class="col mx-5 px-5">
-                                    <label for="telefono" class="form-label">Teléfono</label>
-                                    <input type="text" class="form-control" id="telefono" name="telefono" value="<?php echo $coordinador['telefono']; ?>">
-                                </div>
-                            </div>
+                                    <div class="row mb-3">
+                                        <div class="col mx-5 px-5">
+                                            <label for="correo" class="form-label">Correo Electrónico</label>
+                                            <input type="email" class="form-control" id="correo" name="correo" value="<?php echo $coordinador['correo']; ?>">
+                                        </div>
+                                        <div class="col mx-5 px-5">
+                                            <label for="telefono" class="form-label">Teléfono</label>
+                                            <input type="text" class="form-control" id="telefono" name="telefono" value="<?php echo $coordinador['telefono']; ?>">
+                                        </div>
+                                    </div>
 
-                            <div class="row mb-3">
-                                <div class="col mx-5 px-5">
-                                    <label for="direccion" class="form-label">Dirección</label>
-                                    <input type="text" class="form-control" id="direccion" name="direccion" value="<?php echo $coordinador['direccion']; ?>">
-                                </div>
-                                <div class="col mx-5 px-5">
-                                    <label for="genero" class="form-label">Género</label>
-                                    <select id="genero" name="genero" class="form-select">
-                                        <option value="Masculino" <?php echo ($coordinador['genero'] === 'Masculino') ? 'selected' : ''; ?>>Masculino</option>
-                                        <option value="Femenino" <?php echo ($coordinador['genero'] === 'Femenino') ? 'selected' : ''; ?>>Femenino</option>
-                                        <option value="Otro" <?php echo ($coordinador['genero'] === 'Otro') ? 'selected' : ''; ?>>Otro</option>
-                                    </select>
-                                </div>
-                            </div>
+                                    <div class="row mb-3">
+                                        <div class="col mx-5 px-5">
+                                            <label for="direccion" class="form-label">Dirección</label>
+                                            <input type="text" class="form-control" id="direccion" name="direccion" value="<?php echo $coordinador['direccion']; ?>">
+                                        </div>
+                                        <div class="col mx-5 px-5">
+                                            <label for="genero" class="form-label">Género</label>
+                                            <select id="genero" name="genero" class="form-select">
+                                                <option value="Masculino" <?php echo ($coordinador['genero'] === 'Masculino') ? 'selected' : ''; ?>>Masculino</option>
+                                                <option value="Femenino" <?php echo ($coordinador['genero'] === 'Femenino') ? 'selected' : ''; ?>>Femenino</option>
+                                                <option value="Otro" <?php echo ($coordinador['genero'] === 'Otro') ? 'selected' : ''; ?>>Otro</option>
+                                            </select>
+                                        </div>
+                                    </div>
 
-                            <div class="row mb-3">
-                                <div class="col mx-5 px-5">
-                                    <label for="fecha_nacimiento" class="form-label">Fecha de Nacimiento</label>
-                                    <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" value="<?php echo $coordinador['fecha_nacimiento']; ?>">
-                                </div>
-                                <div class="col mx-5 px-5">
-                                    <label for="fecha_vinculacion" class="form-label">Fecha de Vinculación</label>
-                                    <input type="date" class="form-control" id="fecha_vinculacion" name="fecha_vinculacion" value="<?php echo $coordinador['fecha_vinculacion']; ?>">
-                                </div>
-                            </div>
+                                    <div class="row mb-3">
+                                        <div class="col mx-5 px-5">
+                                            <label for="fecha_nacimiento" class="form-label">Fecha de Nacimiento</label>
+                                            <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" value="<?php echo $coordinador['fecha_nacimiento']; ?>">
+                                        </div>
+                                        <div class="col mx-5 px-5">
+                                            <label for="fecha_vinculacion" class="form-label">Fecha de Vinculación</label>
+                                            <input type="date" class="form-control" id="fecha_vinculacion" name="fecha_vinculacion" value="<?php echo $coordinador['fecha_vinculacion']; ?>">
+                                        </div>
+                                    </div>
 
-                            <div class="row mb-3">
-                                <div class="col mx-5 px-5">
-                                    <label for="acuerdo_nombramiento" class="form-label">Acuerdo de Nombramiento (PDF)</label>
-                                    <input type="file" class="form-control" id="acuerdo_nombramiento" name="acuerdo_nombramiento">
-                                    <?php if ($coordinador['acuerdo_nombramiento']): ?>
-                                        <a href="../Coordinador/uploads/<?php echo $coordinador['acuerdo_nombramiento']; ?>" target="_blank">Ver archivo actual</a>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
+                                    <div class="row mb-3">
+                                        <div class="col mx-5 px-5">
+                                            <label for="acuerdo_nombramiento" class="form-label">Acuerdo de Nombramiento (PDF)</label>
+                                            <input type="file" class="form-control" id="acuerdo_nombramiento" name="acuerdo_nombramiento">
+                                            <?php if ($coordinador['acuerdo_nombramiento']): ?>
+                                                <a href="../Coordinador/uploads/<?php echo $coordinador['acuerdo_nombramiento']; ?>" target="_blank">
+                                                    <img src="../img/pdf-icon.png" alt="PDF" style="width: 20px; height: 20px;"> 
+                                                    <?php echo $coordinador['acuerdo_nombramiento']; ?>
+                                                </a>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="col mx-5 px-5">
+                                            <label for="foto" class="form-label">Foto</label>
+                                            <input type="file" class="form-control" id="foto" name="foto">
+                                            <?php if ($coordinador['foto']): ?>
+                                                <img src="../Coordinador/fotos/<?php echo $coordinador['foto']; ?>" alt="Foto del coordinador" class="foto-preview">
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
 
-                            <div class="row mb-3">
-                                <div class="col mx-5 px-5">
-                                    <label for="contraseña" class="form-label">Contraseña</label>
-                                    <input type="password" class="form-control" id="contraseña" name="contraseña">
-                                </div>
-                                <div class="col mx-5 px-5">
-                                    <label for="confcontraseña" class="form-label">Confirmar Contraseña</label>
-                                    <input type="password" class="form-control" id="confcontraseña" name="confcontraseña">
-                                </div>
-                            </div>
+                                    <div class="row mb-3">
+                                        <div class="col mx-5 px-5">
+                                            <label for="id_programa" class="form-label">Programa</label>
+                                            <select id="id_programa" name="id_programa" class="form-select">
+                                                <?php foreach ($programas as $programa): ?>
+                                                    <option value="<?php echo $programa['id_programa']; ?>" <?php echo ($programa['id_programa'] == $coordinador['id_programa']) ? 'selected' : ''; ?>>
+                                                        <?php echo $programa['descripcion']; ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                    </div>
 
-                            <br>
-                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                    <button class="btn btn-primary" type="submit">Actualizar</button>
-                                    <a href="listarCoordinador.php" class="btn btn-secondary">Cancelar</a>
+                                    <br>
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                        <button class="btn btn-primary" type="submit">Actualizar</button>
+                                        <a href="listarCoordinador.php" class="btn btn-secondary">Cancelar</a>
+                                    </div>
+                                    <br><br>
                                 </div>
-                                <br><br>
+                            </div>        
                         </form>
                     </div>
                 </div>

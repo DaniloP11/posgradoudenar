@@ -21,16 +21,17 @@ if (isset($_GET['id']) && !empty($_GET['id'])) {
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Validación de campos obligatorios
-    if (empty($_POST['nombre']) || empty($_POST['correo']) || empty($_POST['contraseña']) || empty($_POST['telefono']) || empty($_POST['direccion']) || empty($_POST['genero']) || empty($_POST['fecha_nacimiento'])) {
+    if (empty($_POST['nombre']) || empty($_POST['correo']) || empty($_POST['telefono']) || empty($_POST['direccion']) || empty($_POST['genero']) || empty($_POST['fecha_nacimiento']) || empty($_POST['id_programa']) || empty($_POST['id_coordinador'])) {
         echo "<script>alert('Todos los campos obligatorios deben estar llenos');</script>";
     } else {
         $nombre = $_POST['nombre'];
         $correo = $_POST['correo'];
-        $contraseña = password_hash($_POST['contraseña'], PASSWORD_DEFAULT); // Encriptar contraseña
         $telefono = $_POST['telefono'];
         $direccion = $_POST['direccion'];
         $genero = $_POST['genero'];
         $fecha_nacimiento = $_POST['fecha_nacimiento'];
+        $id_programa = intval($_POST['id_programa']);
+        $id_coordinador = intval($_POST['id_coordinador']);
 
         // Manejo de archivo de fotografía
         $fotografia = $asistente['fotografia'];
@@ -63,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Actualización en la base de datos
         if (!isset($error)) {
-            $query_update_asistente = mysqli_query(conexion(), "UPDATE asistentes SET nombre='$nombre', correo='$correo', contraseña='$contraseña', telefono='$telefono', direccion='$direccion', genero='$genero', fecha_nacimiento='$fecha_nacimiento', fotografia='$fotografia' WHERE id_asistente=$id_asistente");
+            $query_update_asistente = mysqli_query(conexion(), "UPDATE asistentes SET nombre='$nombre', correo='$correo', telefono='$telefono', direccion='$direccion', genero='$genero', fecha_nacimiento='$fecha_nacimiento', fotografia='$fotografia', id_programa=$id_programa, id_coordinador=$id_coordinador WHERE id_asistente=$id_asistente");
 
             if ($query_update_asistente) {
                 echo "<script>alert('Asistente actualizado correctamente'); window.location.href='listarAsistente.php';</script>";
@@ -75,6 +76,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 }
+
+// Obtener programas y coordinadores
+$programas_query = mysqli_query(conexion(), "SELECT id_programa, descripcion FROM programas");
+$coordinadores_query = mysqli_query(conexion(), "SELECT id_coordinador, nombre FROM coordinadores");
 ?>
 
 <!DOCTYPE html>
@@ -102,7 +107,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar" aria-controls="offcanvasDarkNavbar">
                 <span class="navbar-toggler-icon"></span>
             </button>
-
             <div class="btn-group">
                 <button type="button" class="btn btn-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                     Sesión Administrador
@@ -117,7 +121,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <h5 class="offcanvas-title" id="offcanvasDarkNavbarLabel">Administrador</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 </div>
-
                 <div class="offcanvas-body">
                     <ul class="navbar-nav justify-content-start flex-grow-1 pe-3">
                         <li class="nav-item">
@@ -151,17 +154,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                         <label for="nombre" class="form-label">Nombre</label>
                                         <input type="text" class="form-control" id="nombre" name="nombre" value="<?php echo htmlspecialchars($asistente['nombre']); ?>">
                                     </div>
-                                </div>
-                                <div class="row mb-3">
                                     <div class="col">
                                         <label for="correo" class="form-label">Correo</label>
                                         <input type="email" class="form-control" id="correo" name="correo" value="<?php echo htmlspecialchars($asistente['correo']); ?>">
-                                    </div>
-                                </div>
-                                <div class="row mb-3">
-                                    <div class="col">
-                                        <label for="contraseña" class="form-label">Contraseña</label>
-                                        <input type="password" class="form-control" id="contraseña" name="contraseña" required>
                                     </div>
                                 </div>
                                 <div class="row mb-3">
@@ -183,12 +178,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                             <option <?php if ($asistente['genero'] == 'Otro') echo 'selected'; ?> value="Otro">Otro</option>
                                         </select>
                                     </div>
-                                </div>
-                                <div class="row mb-3">
                                     <div class="col">
                                         <label for="fecha_nacimiento" class="form-label">Fecha de Nacimiento</label>
                                         <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" value="<?php echo htmlspecialchars($asistente['fecha_nacimiento']); ?>">
                                     </div>
+                                    
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <label for="id_programa" class="form-label">Programa</label>
+                                        <select id="id_programa" name="id_programa" class="form-select">
+                                            <option value="">Seleccionar programa</option>
+                                            <?php while ($programa = mysqli_fetch_assoc($programas_query)): ?>
+                                                <option value="<?php echo $programa['id_programa']; ?>" <?php if ($asistente['id_programa'] == $programa['id_programa']) echo 'selected'; ?>>
+                                                    <?php echo htmlspecialchars($programa['descripcion']); ?>
+                                                </option>
+                                            <?php endwhile; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <label for="id_coordinador" class="form-label">Coordinador</label>
+                                        <select id="id_coordinador" name="id_coordinador" class="form-select">
+                                            <option value="">Seleccionar coordinador</option>
+                                            <?php while ($coordinador = mysqli_fetch_assoc($coordinadores_query)): ?>
+                                                <option value="<?php echo $coordinador['id_coordinador']; ?>" <?php if ($asistente['id_coordinador'] == $coordinador['id_coordinador']) echo 'selected'; ?>>
+                                                    <?php echo htmlspecialchars($coordinador['nombre']); ?>
+                                                </option>
+                                            <?php endwhile; ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
                                     <div class="col">
                                         <label for="fotografia" class="form-label">Fotografía</label>
                                         <input type="file" class="form-control" id="fotografia" name="fotografia">
@@ -196,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                             <img src="../Asistente/uploads/<?php echo htmlspecialchars($asistente['fotografia']); ?>" alt="Fotografía Actual" width="100">
                                         <?php endif; ?>
                                     </div>
-                                </div>
+                                </div>                      
                                 <br>
                                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                                     <button class="btn btn-primary" type="submit">Actualizar</button>
